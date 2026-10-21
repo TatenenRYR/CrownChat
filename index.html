@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CrownChat - GastroCrown Dashboard</title>
+    <title>CrownChat - GastroCrown Enterprise</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -29,7 +29,7 @@
     </script>
     
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <!-- React & ReactDOM -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -44,8 +44,8 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
-            color: #1e293b;
+            background-color: #f1f5f9;
+            color: #0f172a;
             margin: 0;
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
@@ -54,15 +54,23 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px); }
+            from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-fade-in {
-            animation: fadeIn 0.3s ease-out forwards;
+            animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         .material-input:focus-within {
             border-color: #8B0000;
-            box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.12);
+            box-shadow: 0 0 0 4px rgba(139, 0, 0, 0.1);
+        }
+        /* Glasmorphism and Modern Shadows */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+        }
+        .custom-shadow {
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 0 1px 1px rgba(0, 0, 0, 0.05);
         }
     </style>
 </head>
@@ -89,10 +97,9 @@
             return <span ref={spanRef} className={`inline-flex items-center justify-center shrink-0 ${className}`} />;
         };
 
-        // --- BACKEND API CONFIGURATION ---
         const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : 'https://gastrocrown.com/api';
 
-        // --- TOAST NOTIFICATION COMPONENT ---
+        // --- TOAST NOTIFICATION ---
         const Toast = ({ message, type = 'info', onClose }) => {
             useEffect(() => {
                 const timer = setTimeout(onClose, 4000);
@@ -100,7 +107,7 @@
             }, [onClose]);
 
             return (
-                <div className={`fixed bottom-6 right-6 z-50 px-5 py-3.5 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-3 animate-fade-in border ${type === 'error' ? 'bg-red-600 text-white border-red-700' : 'bg-slate-900 text-white border-slate-700'}`}>
+                <div className={`fixed bottom-6 right-6 z-50 px-5 py-3.5 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-3 animate-fade-in border ${type === 'error' ? 'bg-red-600 text-white border-red-700' : 'bg-slate-900 text-white border-slate-800'}`}>
                     <Icon name={type === 'error' ? 'alert-circle' : 'check-circle-2'} size={18} className={type === 'error' ? 'text-white' : 'text-emerald-400'} />
                     <span>{message}</span>
                 </div>
@@ -108,11 +115,10 @@
         };
 
         // =========================================================================
-        // ONBOARDING MODULE (QR-Invite -> Pin Gatekeeper -> Setup & DSGVO)
+        // ONBOARDING FLOW (QR-Invite -> Pin Gatekeeper -> DSGVO Setup)
         // =========================================================================
-
         const OnboardingFlow = ({ onLoginSuccess }) => {
-            const [step, setStep] = useState(1); // 1: Welcome, 2: Gatekeeper, 3: Setup
+            const [step, setStep] = useState(1);
             const [pin, setPin] = useState('');
             const [staffData, setStaffData] = useState(null);
             const [email, setEmail] = useState('');
@@ -144,7 +150,6 @@
                         setErrorMsg(data.message || 'PIN ungültig oder Mitarbeiter nicht im Stamm gefunden.');
                     }
                 } catch (err) {
-                    // Offline / Demo Fallback
                     if (pin === '1414' || pin === '1234') {
                         setStaffData({ id: 99, name: 'Marvin Ringer', role: 'Mitarbeiter', branch: 'Schnitzelwelt Meppen' });
                         setStep(3);
@@ -176,29 +181,29 @@
             };
 
             return (
-                <div className="min-h-screen w-full flex items-center justify-center bg-slate-900 p-4">
-                    <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 animate-fade-in">
+                <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-950 to-black p-4">
+                    <div className="w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 animate-fade-in p-8">
                         
                         {step === 1 && (
-                            <div className="p-8 text-center space-y-6">
-                                <div className="w-20 h-20 bg-brand-50 text-brand rounded-2xl flex items-center justify-center mx-auto shadow-sm border border-brand-100">
+                            <div className="text-center space-y-6">
+                                <div className="w-20 h-20 bg-brand-50 text-brand rounded-3xl flex items-center justify-center mx-auto shadow-inner border border-brand-100">
                                     <Icon name="qr-code" size={40} />
                                 </div>
                                 <div>
                                     <h1 className="text-2xl font-black text-slate-900 tracking-tight">CrownChat</h1>
-                                    <p className="text-sm text-slate-500 mt-1">Das offizielle Mitarbeiter-Dashboard</p>
+                                    <p className="text-xs text-slate-500 mt-1 font-medium">Sicheres Mitarbeiter-Portal der Schnitzelwelt</p>
                                 </div>
-                                <div className="bg-brand-50 border border-brand-100 rounded-2xl p-4 text-left">
-                                    <div className="flex items-center gap-2 text-brand font-bold text-xs uppercase tracking-wider mb-1">
+                                <div className="bg-brand-50 border border-brand-100 rounded-3xl p-5 text-left space-y-2">
+                                    <div className="flex items-center gap-2 text-brand font-extrabold text-[11px] uppercase tracking-wider">
                                         <Icon name="clock" size={14} /> 48h Einladungslink aktiv
                                     </div>
-                                    <p className="text-xs text-slate-600 leading-relaxed">
-                                        Dein QR-Code wurde erfolgreich gescannt. Starte jetzt die einmalige Verifizierung mit deiner Kassen-PIN.
+                                    <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                                        Du wurdest per QR-Code eingeladen. Verifiziere dich jetzt einmalig mit deiner Kassen-PIN aus dem GastroCrown-System.
                                     </p>
                                 </div>
                                 <button 
                                     onClick={() => setStep(2)}
-                                    className="w-full py-4 bg-brand hover:bg-brand-light text-white rounded-2xl font-bold shadow-lg shadow-brand/25 transition-all flex items-center justify-center gap-2"
+                                    className="w-full py-4 bg-brand hover:bg-brand-light text-white rounded-2xl font-black text-sm shadow-xl shadow-brand/20 transition-all active:scale-95 flex items-center justify-center gap-2"
                                 >
                                     Identifikation starten <Icon name="arrow-right" size={18} />
                                 </button>
@@ -206,18 +211,18 @@
                         )}
 
                         {step === 2 && (
-                            <form onSubmit={handlePinSubmit} className="p-8 space-y-6">
+                            <form onSubmit={handlePinSubmit} className="space-y-6">
                                 <div className="text-center">
-                                    <div className="w-16 h-16 bg-slate-100 text-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                                    <div className="w-16 h-16 bg-slate-100 text-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
                                         <Icon name="shield-check" size={32} />
                                     </div>
                                     <h2 className="text-xl font-black text-slate-900">Türsteher-Check</h2>
-                                    <p className="text-xs text-slate-500 mt-1">Gleiche deine Daten mit der GastroCrown Datenbank ab.</p>
+                                    <p className="text-xs text-slate-500 mt-1">Sicherer Abgleich mit der GastroCrown Personal-Datenbank.</p>
                                 </div>
 
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">4-stellige Kassen-PIN</label>
+                                        <label className="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2">4-stellige Kassen-PIN</label>
                                         <div className="material-input flex items-center bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 transition-all">
                                             <Icon name="lock" size={18} className="text-slate-400 mr-3" />
                                             <input 
@@ -233,7 +238,7 @@
                                     </div>
 
                                     {errorMsg && (
-                                        <div className="text-red-600 text-xs font-bold bg-red-50 p-3 rounded-xl border border-red-200 flex items-center gap-2">
+                                        <div className="text-red-600 text-xs font-bold bg-red-50 p-3.5 rounded-2xl border border-red-200 flex items-center gap-2">
                                             <Icon name="alert-circle" size={16} className="shrink-0" /> {errorMsg}
                                         </div>
                                     )}
@@ -242,7 +247,7 @@
                                 <button 
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full py-4 bg-slate-900 hover:bg-black text-white rounded-2xl font-bold shadow-lg transition-all flex items-center justify-center gap-2"
+                                    className="w-full py-4 bg-slate-900 hover:bg-black text-white rounded-2xl font-black text-sm shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2"
                                 >
                                     {loading ? 'Prüfe Personalstamm...' : <><Icon name="unlock" size={18} /> PIN bestätigen</>}
                                 </button>
@@ -250,19 +255,19 @@
                         )}
 
                         {step === 3 && (
-                            <form onSubmit={handleSetupSubmit} className="p-8 space-y-5">
+                            <form onSubmit={handleSetupSubmit} className="space-y-5">
                                 <div className="text-center">
-                                    <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-emerald-100">
+                                    <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-emerald-100 shadow-inner">
                                         <Icon name="user-check" size={32} />
                                     </div>
                                     <h2 className="text-xl font-black text-slate-900">Konto einrichten</h2>
-                                    <p className="text-xs text-slate-500 mt-1">Identität für <b>{staffData?.name || 'Mitarbeiter'}</b> bestätigt.</p>
+                                    <p className="text-xs text-slate-500 mt-1">Identität für <b>{staffData?.name || 'Mitarbeiter'}</b> erfolgreich bestätigt.</p>
                                 </div>
 
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">Private E-Mail Adresse</label>
-                                        <div className="material-input flex items-center bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 transition-all">
+                                        <label className="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2">Private E-Mail Adresse</label>
+                                        <div className="material-input flex items-center bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 transition-all">
                                             <Icon name="mail" size={18} className="text-slate-400 mr-3" />
                                             <input 
                                                 type="email" 
@@ -270,14 +275,14 @@
                                                 onChange={(e) => setEmail(e.target.value)}
                                                 placeholder="name@beispiel.de"
                                                 required
-                                                className="bg-transparent w-full outline-none text-slate-900 text-sm font-medium"
+                                                className="bg-transparent w-full outline-none text-slate-900 text-sm font-semibold"
                                             />
                                         </div>
                                     </div>
 
                                     <div>
-                                        <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">App-Passwort festlegen</label>
-                                        <div className="material-input flex items-center bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 transition-all">
+                                        <label className="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2">App-Passwort festlegen</label>
+                                        <div className="material-input flex items-center bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 transition-all">
                                             <Icon name="key" size={18} className="text-slate-400 mr-3" />
                                             <input 
                                                 type="password" 
@@ -285,20 +290,20 @@
                                                 onChange={(e) => setPassword(e.target.value)}
                                                 placeholder="Mindestens 8 Zeichen"
                                                 required
-                                                className="bg-transparent w-full outline-none text-slate-900 text-sm font-medium"
+                                                className="bg-transparent w-full outline-none text-slate-900 text-sm font-semibold"
                                             />
                                         </div>
                                     </div>
 
-                                    <label className="flex items-start gap-3 pt-2 cursor-pointer">
+                                    <label className="flex items-start gap-3 pt-2 cursor-pointer bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
                                         <input 
                                             type="checkbox" 
                                             checked={accepted}
                                             onChange={(e) => setAccepted(e.target.checked)}
-                                            className="mt-1 w-4 h-4 accent-[#8B0000] rounded cursor-pointer"
+                                            className="mt-0.5 w-4 h-4 accent-[#8B0000] rounded cursor-pointer"
                                         />
-                                        <span className="text-xs text-slate-600 leading-relaxed">
-                                            Ich stimme der DSGVO-konformen Speicherung meiner E-Mail-Adresse für den App-Login zu.
+                                        <span className="text-xs text-slate-600 leading-relaxed font-medium">
+                                            Ich stimme der DSGVO-konformen Speicherung meiner E-Mail-Adresse für den sicheren App-Login zu.
                                         </span>
                                     </label>
                                 </div>
@@ -306,7 +311,7 @@
                                 <button 
                                     type="submit"
                                     disabled={!accepted || !email || !password || loading}
-                                    className={`w-full py-4 rounded-2xl font-bold shadow-lg transition-all flex items-center justify-center gap-2 ${accepted && email && password ? 'bg-brand hover:bg-brand-light text-white' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
+                                    className={`w-full py-4 rounded-2xl font-black text-sm shadow-xl transition-all flex items-center justify-center gap-2 ${accepted && email && password ? 'bg-brand hover:bg-brand-light text-white active:scale-95' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
                                 >
                                     {loading ? 'Aktiviere...' : 'Konto aktivieren & Starten'} <Icon name="check-circle" size={18} />
                                 </button>
@@ -319,37 +324,45 @@
         };
 
         // =========================================================================
-        // MAIN APPLICATION (Vollbild Dashboard mit allen 5 Modulen)
+        // MAIN APPLICATION (WhatsApp / Facebook / Google / Instagram Style Dashboard)
         // =========================================================================
-
         const MainApp = ({ currentUser, onLogout }) => {
-            const [activeTab, setActiveTab] = useState('feed'); // feed, chat, schedule, hub, profile
+            const [activeTab, setActiveTab] = useState('feed'); 
             const [toast, setToast] = useState(null);
 
-            // Feed States
+            // Feed States (Facebook / Instagram Style)
             const [posts, setPosts] = useState([
                 {
                     id: 1,
                     author: 'Marvin Ringer',
-                    role: 'Admin',
+                    role: 'Admin / Inhaber',
                     date: 'Heute, 09:15',
-                    channel: '🍽️ Schnitzel-Talk',
+                    channel: '🍽️ Schnitzel-Talk & News',
                     important: true,
-                    text: 'So kann es manchmal ablaufen!\n\nBitte denkt daran, dass wir alle im Team zusammenarbeiten und aufeinander achten müssen. Danke für eure Aufmerksamkeit! 🙏',
-                    likes: 5,
+                    text: 'Guten Morgen Crew! 🔥\n\nUnsere neue Schichtplanung für November ist online. Bitte prüft eure Verfügbarkeiten im Hub. Lasst uns diese Woche wieder Vollgas geben! 🥩👑',
+                    image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&auto=format&fit=crop&q=80',
+                    likes: 14,
                     liked: false,
-                    seenBy: ['Marvin', 'Marina Jänen'],
-                    comments: [{ id: 1, user: 'Marina Jänen', text: 'Herzlich willkommen! 🙌' }]
+                    seenBy: ['Marvin', 'Marina Jänen', 'Enno Knuth', 'Lukas'],
+                    comments: [{ id: 1, user: 'Marina Jänen', text: 'Schichtplan ist gecheckt! 🙌' }]
                 }
             ]);
             const [newPostText, setNewPostText] = useState('');
             const [showPostModal, setShowPostModal] = useState(false);
-            const [activeStory, setActiveStory] = useState(null);
 
-            // Chat States
-            const [selectedChat, setSelectedChat] = useState({ id: 1, name: '🍳 Küchen-Team Meppen', unread: 0, messages: [
-                { id: 1, sender: 'GastroCrown Bot', text: '14-Uhr Zählung in Meppen abgeschlossen.', time: '14:05', isMe: false }
-            ]});
+            // Chat States (WhatsApp Style)
+            const [chats, setChats] = useState([
+                { id: 1, name: '🍳 Küchen-Team Meppen', lastMsg: 'Zählung erfolgreich abgeschlossen ✅', time: '14:30', unread: 0, online: true, messages: [
+                    { id: 1, sender: 'GastroCrown Bot', text: '14-Uhr Zählung in Meppen abgeschlossen.', time: '14:05', isMe: false }
+                ]},
+                { id: 2, name: '👥 Alle Mitarbeiter (Enterprise)', lastMsg: 'Wochenplan ist online!', time: 'Gestern', unread: 2, online: false, messages: [
+                    { id: 1, sender: 'Admin', text: 'Wochenplan ist online!', time: 'Gestern', isMe: false }
+                ]},
+                { id: 3, name: 'Marina Jänen', lastMsg: 'Brauchen dringend Servietten vorne.', time: '11:15', unread: 0, online: true, messages: [
+                    { id: 1, sender: 'Marina', text: 'Brauchen dringend Servietten vorne.', time: '11:15', isMe: false }
+                ]}
+            ]);
+            const [selectedChat, setSelectedChat] = useState(null);
             const [chatInput, setChatInput] = useState('');
 
             // Hub States
@@ -357,13 +370,35 @@
 
             const triggerToast = (msg, type = 'info') => setToast({ message: msg, type });
 
+            const handleCreatePost = (e) => {
+                e.preventDefault();
+                if (!newPostText.trim()) return;
+                const newPost = {
+                    id: Date.now(),
+                    author: currentUser?.name || 'Marvin Ringer',
+                    role: currentUser?.role || 'Mitarbeiter',
+                    date: 'Gerade eben',
+                    channel: '💬 Team-Feed',
+                    important: false,
+                    text: newPostText,
+                    likes: 0,
+                    liked: false,
+                    seenBy: [currentUser?.name || 'Marvin'],
+                    comments: []
+                };
+                setPosts([newPost, ...posts]);
+                setNewPostText('');
+                setShowPostModal(false);
+                triggerToast('Beitrag im Team-Feed veröffentlicht! 🚀');
+            };
+
             return (
-                <div className="min-h-screen bg-slate-100 flex flex-col">
+                <div className="min-h-screen bg-slate-100 flex flex-col font-sans">
                     
-                    {/* TOP NAVIGATION HEADER */}
-                    <header className="bg-white border-b border-slate-200 px-6 py-3.5 flex justify-between items-center sticky top-0 z-40 shadow-xs">
+                    {/* TOP GOOGLE-STYLE HEADER */}
+                    <header className="glass-card border-b border-slate-200/80 px-6 py-3.5 flex justify-between items-center sticky top-0 z-40 shadow-xs">
                         <div className="flex items-center gap-3">
-                            <div className="w-11 h-11 rounded-xl overflow-hidden shadow-md shrink-0 border border-brand/20 bg-brand-50">
+                            <div className="w-11 h-11 rounded-2xl overflow-hidden shadow-md shrink-0 border border-brand/20 bg-brand-50">
                                 <img 
                                     src="http://gastrocrown.com/images/CrownChat/CrownChat-App-Icon.png" 
                                     alt="CrownChat Logo" 
@@ -371,24 +406,24 @@
                                 />
                             </div>
                             <div>
-                                <h1 className="font-black text-slate-900 text-base leading-tight">Crown<span className="text-brand">Chat</span></h1>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Schnitzelwelt Enterprise</span>
+                                <h1 className="font-black text-slate-900 text-base leading-tight tracking-tight">Crown<span className="text-brand">Chat</span></h1>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Schnitzelwelt Enterprise</span>
                             </div>
                         </div>
 
-                        {/* NAV TABS */}
-                        <nav className="hidden md:flex items-center gap-1 bg-slate-100 p-1 rounded-2xl">
+                        {/* DESKTOP NAV TABS (GOOGLE MATERIAL STYLE) */}
+                        <nav className="hidden md:flex items-center gap-1.5 bg-slate-200/60 p-1.5 rounded-2xl">
                             {[
-                                { id: 'feed', label: 'Feed', icon: 'megaphone' },
-                                { id: 'chat', label: 'Chat', icon: 'message-square' },
+                                { id: 'feed', label: 'Feed & Stories', icon: 'sparkles' },
+                                { id: 'chat', label: 'WhatsApp Chat', icon: 'message-circle' },
                                 { id: 'schedule', label: 'Dienstplan', icon: 'calendar' },
                                 { id: 'hub', label: 'Hub & Academy', icon: 'book-open' },
-                                { id: 'profile', label: 'Du / Profil', icon: 'user' }
+                                { id: 'profile', label: 'Mein Profil', icon: 'user' }
                             ].map(tab => (
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeTab === tab.id ? 'bg-white text-brand shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${activeTab === tab.id ? 'bg-white text-brand shadow-sm scale-102' : 'text-slate-600 hover:text-slate-900 hover:bg-white/40'}`}
                                 >
                                     <Icon name={tab.icon} size={16} /> {tab.label}
                                 </button>
@@ -398,20 +433,22 @@
                         {/* USER PROFILE INFO */}
                         <div className="flex items-center gap-3">
                             <div className="text-right hidden sm:block">
-                                <div className="text-xs font-bold text-slate-900">{currentUser?.name || 'Marvin Ringer'}</div>
-                                <div className="text-[10px] font-medium text-emerald-600">Online • Meppen</div>
+                                <div className="text-xs font-black text-slate-900">{currentUser?.name || 'Marvin Ringer'}</div>
+                                <div className="text-[10px] font-extrabold text-emerald-600 flex items-center justify-end gap-1">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Online
+                                </div>
                             </div>
-                            <div onClick={onLogout} title="Abmelden" className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-700 flex items-center justify-center cursor-pointer transition">
+                            <div onClick={onLogout} title="Abmelden" className="w-10 h-10 rounded-2xl bg-slate-200/60 hover:bg-red-50 hover:text-red-600 text-slate-700 flex items-center justify-center cursor-pointer transition shadow-xs">
                                 <Icon name="log-out" size={18} />
                             </div>
                         </div>
                     </header>
 
-                    {/* MOBILE BOTTOM NAVIGATION */}
-                    <div className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 flex justify-around p-2 z-40 shadow-lg">
+                    {/* MOBILE BOTTOM NAVIGATION (WHATSAPP / INSTAGRAM STYLE) */}
+                    <div className="md:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200 flex justify-around p-2 z-40 shadow-2xl">
                         {[
-                            { id: 'feed', label: 'Feed', icon: 'megaphone' },
-                            { id: 'chat', label: 'Chat', icon: 'message-square' },
+                            { id: 'feed', label: 'Feed', icon: 'sparkles' },
+                            { id: 'chat', label: 'Chat', icon: 'message-circle' },
                             { id: 'schedule', label: 'Plan', icon: 'calendar' },
                             { id: 'hub', label: 'Hub', icon: 'book-open' },
                             { id: 'profile', label: 'Du', icon: 'user' }
@@ -419,10 +456,10 @@
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`flex flex-col items-center p-2 rounded-xl ${activeTab === tab.id ? 'text-brand font-bold' : 'text-slate-400'}`}
+                                className={`flex flex-col items-center p-2 rounded-2xl transition-all ${activeTab === tab.id ? 'text-brand font-black scale-105 bg-brand-50/50' : 'text-slate-400 font-medium'}`}
                             >
                                 <Icon name={tab.icon} size={20} />
-                                <span className="text-[9px] mt-0.5">{tab.label}</span>
+                                <span className="text-[9px] mt-1">{tab.label}</span>
                             </button>
                         ))}
                     </div>
@@ -430,68 +467,94 @@
                     {/* MAIN CONTENT AREA */}
                     <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 pb-24 md:pb-8">
                         
-                        {/* 1. FEED MODUL */}
+                        {/* 1. FEED & STORIES MODULE (FACEBOOK / INSTAGRAM STYLE) */}
                         {activeTab === 'feed' && (
-                            <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
+                            <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
                                 
-                                <div className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm flex items-center gap-4 overflow-x-auto no-scrollbar">
-                                    <div className="flex flex-col items-center shrink-0 cursor-pointer" onClick={() => setShowPostModal(true)}>
-                                        <div className="w-14 h-14 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition">
-                                            <Icon name="plus" size={24} />
+                                {/* Stories Bar (Instagram Style) */}
+                                <div className="bg-white p-4 rounded-3xl border border-slate-200/80 custom-shadow flex items-center gap-4 overflow-x-auto no-scrollbar">
+                                    <div className="flex flex-col items-center shrink-0 cursor-pointer group" onClick={() => setShowPostModal(true)}>
+                                        <div className="w-16 h-16 rounded-full bg-brand-50 border-2 border-dashed border-brand/40 flex items-center justify-center text-brand group-hover:scale-105 transition shadow-inner">
+                                            <Icon name="plus" size={26} />
                                         </div>
-                                        <span className="text-[11px] font-bold text-slate-700 mt-1">Beitrag</span>
+                                        <span className="text-[11px] font-black text-slate-800 mt-1.5">Neuer Post</span>
                                     </div>
                                     {[
-                                        { name: 'Schnitzelwelt', img: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=150&auto=format&fit=crop&q=80', text: '🔥 Heute 18 Uhr: Kurzes Team-Briefing!' },
-                                        { name: 'Küche Meppen', img: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=150&auto=format&fit=crop&q=80', text: '✅ Kühlhaus-Check erfolgreich bestanden!' }
+                                        { name: 'Schnitzelwelt', img: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=150&auto=format&fit=crop&q=80' },
+                                        { name: 'Küche Meppen', img: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=150&auto=format&fit=crop&q=80' },
+                                        { name: 'Service Team', img: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=150&auto=format&fit=crop&q=80' }
                                     ].map((s, idx) => (
-                                        <div key={idx} onClick={() => setActiveStory(s)} className="flex flex-col items-center shrink-0 cursor-pointer group">
-                                            <div className="w-14 h-14 rounded-full p-[2.5px] bg-gradient-to-tr from-amber-500 via-brand to-pink-500 group-hover:scale-105 transition">
+                                        <div key={idx} onClick={() => triggerToast(`📸 Story von ${s.name} geöffnet`)} className="flex flex-col items-center shrink-0 cursor-pointer group">
+                                            <div className="w-16 h-16 rounded-full p-[3px] bg-gradient-to-tr from-amber-500 via-brand to-pink-500 group-hover:scale-105 transition shadow-md">
                                                 <img src={s.img} className="w-full h-full rounded-full object-cover border-2 border-white" />
                                             </div>
-                                            <span className="text-[11px] font-bold text-slate-700 mt-1 truncate w-16 text-center">{s.name}</span>
+                                            <span className="text-[11px] font-bold text-slate-700 mt-1.5 truncate w-16 text-center">{s.name}</span>
                                         </div>
                                     ))}
                                 </div>
 
-                                <div className="space-y-4">
+                                {/* Quick Post Creator Card (Facebook Style) */}
+                                <div className="bg-white rounded-3xl border border-slate-200/80 custom-shadow p-5 flex items-center gap-3">
+                                    <div className="w-11 h-11 rounded-2xl bg-brand text-white font-black flex items-center justify-center shadow-md shrink-0">
+                                        {currentUser?.name ? currentUser.name.charAt(0) : 'M'}
+                                    </div>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Was gibt's Neues in der Schnitzelwelt, Marvin?"
+                                        onClick={() => setShowPostModal(true)}
+                                        readOnly
+                                        className="w-full bg-slate-100 hover:bg-slate-200/70 transition rounded-2xl px-5 py-3 text-xs font-semibold text-slate-700 cursor-pointer outline-none"
+                                    />
+                                    <button onClick={() => setShowPostModal(true)} className="bg-brand text-white px-5 py-3 rounded-2xl font-black text-xs shrink-0 shadow-md hover:bg-brand-light transition">
+                                        Teilen
+                                    </button>
+                                </div>
+
+                                {/* Feed Posts */}
+                                <div className="space-y-5">
                                     {posts.map(post => (
-                                        <div key={post.id} className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 space-y-4">
+                                        <div key={post.id} className="bg-white rounded-3xl border border-slate-200/80 custom-shadow p-6 space-y-4 animate-fade-in">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-12 h-12 rounded-2xl bg-brand-50 text-brand font-black flex items-center justify-center border border-brand-100">
+                                                    <div className="w-12 h-12 rounded-2xl bg-brand-50 text-brand font-black flex items-center justify-center border border-brand-100 shadow-xs">
                                                         {post.author.charAt(0)}
                                                     </div>
                                                     <div>
-                                                        <h4 className="font-extrabold text-sm text-slate-900">{post.author} <span className="text-xs font-medium text-slate-400">({post.role})</span></h4>
-                                                        <span className="text-xs text-slate-500">{post.date} in <b className="text-slate-700">{post.channel}</b></span>
+                                                        <h4 className="font-black text-sm text-slate-900">{post.author} <span className="text-xs font-bold text-slate-400">({post.role})</span></h4>
+                                                        <span className="text-xs font-semibold text-slate-500">{post.date} in <b className="text-slate-700">{post.channel}</b></span>
                                                     </div>
                                                 </div>
                                                 {post.important && (
-                                                    <span className="bg-rose-50 text-brand text-[10px] font-black uppercase px-3 py-1 rounded-full border border-rose-200">
+                                                    <span className="bg-rose-50 text-brand text-[10px] font-black uppercase px-3.5 py-1.5 rounded-full border border-rose-200 shadow-xs">
                                                         📌 Wichtig
                                                     </span>
                                                 )}
                                             </div>
 
-                                            <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-line">{post.text}</p>
+                                            <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-line font-medium">{post.text}</p>
+
+                                            {post.image && (
+                                                <div className="rounded-2xl overflow-hidden border border-slate-200 max-h-80 shadow-sm">
+                                                    <img src={post.image} className="w-full h-full object-cover" />
+                                                </div>
+                                            )}
 
                                             <div className="flex justify-between items-center pt-4 border-t border-slate-100">
-                                                <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-2">
                                                     <button 
                                                         onClick={() => {
                                                             setPosts(posts.map(p => p.id === post.id ? { ...p, likes: p.liked ? p.likes - 1 : p.likes + 1, liked: !p.liked } : p));
                                                         }}
-                                                        className={`px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition ${post.liked ? 'bg-rose-100 text-brand' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+                                                        className={`px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 transition ${post.liked ? 'bg-rose-100 text-brand shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
                                                     >
-                                                        <Icon name="heart" size={16} /> {post.likes}
+                                                        <Icon name="heart" size={16} className={post.liked ? 'fill-current' : ''} /> {post.likes}
                                                     </button>
-                                                    <span className="text-xs font-bold text-slate-500 flex items-center gap-1">
-                                                        <Icon name="message-circle" size={16} /> {post.comments.length} Kommentare
-                                                    </span>
+                                                    <button onClick={() => triggerToast('💬 Kommentarbereich geöffnet')} className="px-4 py-2.5 rounded-2xl text-xs font-black bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center gap-2 transition">
+                                                        <Icon name="message-circle" size={16} /> {post.comments.length}
+                                                    </button>
                                                 </div>
 
-                                                <div className="text-xs font-bold text-slate-400 flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+                                                <div className="text-xs font-bold text-slate-400 flex items-center gap-1.5 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200">
                                                     <Icon name="eye" size={15} /> {post.seenBy.length} Gesehen
                                                 </div>
                                             </div>
@@ -501,143 +564,181 @@
                             </div>
                         )}
 
-                        {/* 2. CHAT MODUL */}
+                        {/* 2. CHAT MODULE (WHATSAPP STYLE) */}
                         {activeTab === 'chat' && (
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[72vh] bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden animate-fade-in">
-                                <div className="border-r border-slate-200 p-4 flex flex-col">
-                                    <h3 className="font-black text-base text-slate-900 mb-3">Nachrichten</h3>
-                                    <div className="space-y-2 overflow-y-auto flex-1">
-                                        {[
-                                            { name: '🍳 Küchen-Team Meppen', msg: 'Zählung erledigt', unread: 0 },
-                                            { name: '👥 Alle Mitarbeiter', msg: 'Wochenplan ist da', unread: 2 },
-                                            { name: 'Marina Jänen', msg: 'Brauchen Servietten', unread: 0 }
-                                        ].map((c, idx) => (
-                                            <div key={idx} className="p-3 hover:bg-slate-50 rounded-2xl cursor-pointer flex items-center justify-between">
-                                                <div>
-                                                    <div className="font-bold text-xs text-slate-900">{c.name}</div>
-                                                    <div className="text-[11px] text-slate-500 truncate mt-0.5">{c.msg}</div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[76vh] bg-white rounded-3xl border border-slate-200 custom-shadow overflow-hidden animate-fade-in">
+                                <div className="border-r border-slate-200 p-4 flex flex-col bg-slate-50/50">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <h3 className="font-black text-base text-slate-900">Chats</h3>
+                                        <button onClick={() => triggerToast('➕ Neuer Gruppen-Chat')} className="p-2 bg-brand text-white rounded-xl shadow-md hover:bg-brand-light transition"><Icon name="plus" size={16} /></button>
+                                    </div>
+                                    <div className="space-y-2 overflow-y-auto flex-1 no-scrollbar">
+                                        {chats.map(c => (
+                                            <div 
+                                                key={c.id} 
+                                                onClick={() => setSelectedChat(c)}
+                                                className={`p-3.5 rounded-2xl cursor-pointer flex items-center justify-between transition ${selectedChat?.id === c.id ? 'bg-brand text-white shadow-md' : 'bg-white hover:bg-slate-100 border border-slate-200/60'}`}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-11 h-11 rounded-2xl font-black flex items-center justify-center text-sm ${selectedChat?.id === c.id ? 'bg-white text-brand' : 'bg-brand-50 text-brand border border-brand-100'}`}>
+                                                        {c.name.charAt(2) || c.name.charAt(0)}
+                                                    </div>
+                                                    <div>
+                                                        <div className={`font-extrabold text-xs ${selectedChat?.id === c.id ? 'text-white' : 'text-slate-900'}`}>{c.name}</div>
+                                                        <div className={`text-[11px] truncate mt-0.5 font-medium ${selectedChat?.id === c.id ? 'text-white/80' : 'text-slate-500'}`}>{c.lastMsg}</div>
+                                                    </div>
                                                 </div>
-                                                {c.unread > 0 && <span className="bg-brand text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{c.unread}</span>}
+                                                {c.unread > 0 && <span className="bg-emerald-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-xs">{c.unread}</span>}
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
-                                <div className="md:col-span-2 flex flex-col bg-slate-50/50">
-                                    <div className="p-4 bg-white border-b border-slate-200 flex items-center justify-between">
-                                        <div className="font-black text-sm text-slate-900">{selectedChat.name}</div>
-                                        <div className="flex gap-2">
-                                            <button onClick={() => triggerToast('📞 Audioanruf wird gestartet...')} className="p-2 bg-slate-100 rounded-xl text-slate-700 hover:bg-slate-200"><Icon name="phone" size={16} /></button>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="flex-1 p-4 overflow-y-auto space-y-3">
-                                        {selectedChat.messages.map(m => (
-                                            <div key={m.id} className={`flex flex-col max-w-[70%] ${m.isMe ? 'ml-auto items-end' : 'items-start'}`}>
-                                                <div className={`p-3.5 rounded-2xl text-xs shadow-xs ${m.isMe ? 'bg-brand text-white rounded-br-xs' : 'bg-white text-slate-800 rounded-bl-xs border border-slate-200'}`}>
-                                                    <div>{m.text}</div>
-                                                    <div className="text-[9px] mt-1 text-right opacity-75">{m.time}</div>
+                                <div className="md:col-span-2 flex flex-col bg-slate-50">
+                                    {selectedChat ? (
+                                        <>
+                                            <div className="p-4 bg-white border-b border-slate-200 flex items-center justify-between shadow-xs">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-xl bg-brand text-white font-black flex items-center justify-center text-xs">
+                                                        {selectedChat.name.charAt(2)}
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-black text-sm text-slate-900">{selectedChat.name}</div>
+                                                        <div className="text-[10px] text-emerald-600 font-extrabold">Aktiv</div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <button onClick={() => triggerToast('📞 Audioanruf gestartet')} className="p-2.5 bg-slate-100 rounded-xl text-slate-700 hover:bg-slate-200 transition"><Icon name="phone" size={18} /></button>
+                                                    <button onClick={() => triggerToast('📹 Videokonferenz gestartet')} className="p-2.5 bg-slate-100 rounded-xl text-slate-700 hover:bg-slate-200 transition"><Icon name="video" size={18} /></button>
                                                 </div>
                                             </div>
-                                        ))}
-                                    </div>
+                                            
+                                            <div className="flex-1 p-5 overflow-y-auto space-y-3 no-scrollbar">
+                                                {selectedChat.messages.map(m => (
+                                                    <div key={m.id} className={`flex flex-col max-w-[70%] ${m.isMe ? 'ml-auto items-end' : 'items-start'}`}>
+                                                        <div className={`p-4 rounded-3xl text-xs font-medium shadow-xs ${m.isMe ? 'bg-brand text-white rounded-br-xs' : 'bg-white text-slate-800 rounded-bl-xs border border-slate-200'}`}>
+                                                            <div>{m.text}</div>
+                                                            <div className={`text-[9px] mt-1 text-right ${m.isMe ? 'text-white/70' : 'text-slate-400'}`}>{m.time}</div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
 
-                                    <div className="p-3 bg-white border-t border-slate-200 flex gap-2">
-                                        <input 
-                                            type="text" 
-                                            value={chatInput} 
-                                            onChange={e => setChatInput(e.target.value)} 
-                                            placeholder="Nachricht schreiben..."
-                                            className="flex-1 bg-slate-100 rounded-2xl px-4 py-2.5 text-xs outline-none"
-                                        />
-                                        <button onClick={() => { if (!chatInput.trim()) return; setSelectedChat({...selectedChat, messages: [...selectedChat.messages, { id: Date.now(), sender: 'Du', text: chatInput, time: 'Gerade eben', isMe: true }]}); setChatInput(''); }} className="bg-brand text-white px-5 rounded-2xl font-bold text-xs">Senden</button>
-                                    </div>
+                                            <div className="p-4 bg-white border-t border-slate-200 flex gap-3">
+                                                <input 
+                                                    type="text" 
+                                                    value={chatInput} 
+                                                    onChange={e => setChatInput(e.target.value)} 
+                                                    onKeyDown={e => { if(e.key === 'Enter') { if (!chatInput.trim()) return; setSelectedChat({...selectedChat, messages: [...selectedChat.messages, { id: Date.now(), sender: 'Du', text: chatInput, time: 'Gerade eben', isMe: true }]}); setChatInput(''); }}}
+                                                    placeholder="Nachricht an Team schreiben..."
+                                                    className="flex-1 bg-slate-100 rounded-2xl px-5 py-3 text-xs font-medium outline-none focus:bg-white focus:ring-2 focus:ring-brand/20 transition"
+                                                />
+                                                <button onClick={() => { if (!chatInput.trim()) return; setSelectedChat({...selectedChat, messages: [...selectedChat.messages, { id: Date.now(), sender: 'Du', text: chatInput, time: 'Gerade eben', isMe: true }]}); setChatInput(''); }} className="bg-brand hover:bg-brand-light text-white px-6 rounded-2xl font-black text-xs shadow-md transition active:scale-95">Senden</button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-slate-400">
+                                            <Icon name="message-square" size={48} className="mb-3 opacity-30" />
+                                            <p className="text-sm font-bold">Wähle einen Chat aus, um Nachrichten zu lesen.</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}
 
-                        {/* 3. DIENSTPLAN MODUL */}
+                        {/* 3. DIENSTPLAN MODULE */}
                         {activeTab === 'schedule' && (
-                            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-6 animate-fade-in">
+                            <div className="bg-white rounded-3xl border border-slate-200 custom-shadow p-8 space-y-6 animate-fade-in max-w-4xl mx-auto">
                                 <div className="flex justify-between items-center">
                                     <div>
-                                        <h2 className="text-xl font-black text-slate-900">Dienstplan Oktober 2026</h2>
-                                        <p className="text-xs text-slate-500 mt-0.5">Schnitzelwelt Meppen • Deine Arbeitszeit</p>
+                                        <h2 className="text-2xl font-black text-slate-900">Dienstplan Oktober 2026</h2>
+                                        <p className="text-xs text-slate-500 mt-1 font-semibold">Schnitzelwelt Meppen • Deine persönlichen Schichten</p>
                                     </div>
-                                    <div className="bg-rose-50 text-brand px-4 py-2 rounded-2xl font-extrabold text-xs border border-rose-200">
-                                        Gesamt: 42 Std. / Soll: 160 Std.
+                                    <div className="bg-rose-50 text-brand px-5 py-2.5 rounded-2xl font-black text-xs border border-rose-200 shadow-xs">
+                                        Monatssoll: 160 Std. / Erfasst: 42 Std.
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="p-5 rounded-2xl border-l-4 border-l-brand bg-slate-50 border border-slate-200 space-y-2">
-                                        <span className="text-[10px] font-black uppercase text-brand bg-brand-50 px-2.5 py-1 rounded">Front of House</span>
-                                        <h4 className="font-black text-lg text-slate-900">09:00 - 17:00 Uhr</h4>
-                                        <p className="text-xs text-slate-500">Morgen, Do. 22. Okt • Theke & Service</p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    <div className="p-6 rounded-3xl border-l-8 border-l-brand bg-slate-50 border border-slate-200 space-y-3 custom-shadow">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[10px] font-black uppercase text-brand bg-brand-50 px-3 py-1 rounded-full">Front of House</span>
+                                            <span className="text-xs font-black text-slate-500">Morgen, Do. 22. Okt</span>
+                                        </div>
+                                        <h4 className="font-black text-xl text-slate-900">09:00 - 17:00 Uhr</h4>
+                                        <p className="text-xs text-slate-600 font-medium flex items-center gap-1.5"><Icon name="map-pin" size={14} /> Schnitzelwelt Meppen • Hauptkasse & Service</p>
                                     </div>
-                                    <div className="p-5 rounded-2xl border-l-4 border-l-slate-400 bg-slate-50 border border-slate-200 space-y-2">
-                                        <span className="text-[10px] font-black uppercase text-slate-600 bg-slate-200 px-2.5 py-1 rounded">Back of House</span>
-                                        <h4 className="font-black text-lg text-slate-900">11:00 - 19:30 Uhr</h4>
-                                        <p className="text-xs text-slate-500">Fr. 23. Okt • Küchenleitung</p>
+
+                                    <div className="p-6 rounded-3xl border-l-8 border-l-slate-700 bg-slate-50 border border-slate-200 space-y-3 custom-shadow">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[10px] font-black uppercase text-slate-700 bg-slate-200 px-3 py-1 rounded-full">Back of House</span>
+                                            <span className="text-xs font-black text-slate-500">Fr. 23. Okt</span>
+                                        </div>
+                                        <h4 className="font-black text-xl text-slate-900">11:00 - 19:30 Uhr</h4>
+                                        <p className="text-xs text-slate-600 font-medium flex items-center gap-1.5"><Icon name="map-pin" size={14} /> Schnitzelwelt Meppen • Küche & Standard</p>
                                     </div>
                                 </div>
                             </div>
                         )}
 
-                        {/* 4. HUB & ACADEMY MODUL */}
+                        {/* 4. HUB & ACADEMY MODULE */}
                         {activeTab === 'hub' && (
-                            <div className="space-y-6 animate-fade-in">
-                                <div className="bg-brand text-white rounded-3xl p-8 shadow-lg flex flex-col md:flex-row justify-between items-center gap-4">
-                                    <div>
-                                        <span className="bg-white/20 text-white text-[10px] font-black uppercase px-3 py-1 rounded-full">Einarbeitungskurs</span>
-                                        <h2 className="text-2xl font-black mt-2">Willkommen bei Schnitzelwelt</h2>
-                                        <p className="text-xs text-white/80 mt-1">Absolviere alle Checkpoints, um dein Badge im Profil freizuschalten.</p>
+                            <div className="space-y-6 animate-fade-in max-w-4xl mx-auto">
+                                <div className="bg-brand text-white rounded-3xl p-8 custom-shadow flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden">
+                                    <div className="absolute right-0 top-0 w-64 h-64 bg-white/5 rounded-full blur-3xl pointer-events-none"></div>
+                                    <div className="relative z-10">
+                                        <span className="bg-white/20 text-white text-[10px] font-black uppercase px-3 py-1 rounded-full">Offizieller Onboarding-Kurs</span>
+                                        <h2 className="text-3xl font-black mt-2">Willkommen bei Schnitzelwelt</h2>
+                                        <p className="text-xs text-white/80 mt-1 font-medium">Lerne unsere Qualitätsstandards und erhalte dein exklusives Abzeichen.</p>
                                     </div>
-                                    <button onClick={() => setActiveCourse({ title: 'Willkommen bei Schnitzelwelt', progress: 66 })} className="bg-white text-brand px-6 py-3 rounded-2xl font-black text-xs shadow hover:bg-slate-100 transition">
-                                        Kurs fortsetzen →
+                                    <button onClick={() => triggerToast('📚 Kurs wird geöffnet...')} className="bg-white text-brand px-7 py-3.5 rounded-2xl font-black text-xs shadow-xl hover:bg-slate-100 transition relative z-10">
+                                        Kurs starten →
                                     </button>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                                     {[
-                                        { title: 'Die Schnitzelwelt Art', category: 'Service am Gast', time: '2 Min.' },
-                                        { title: 'Goldene Panade Standard', category: 'Küche', time: '3 Min.' },
-                                        { title: '14-Uhr Zählung & SmartPrep', category: 'Management', time: '2 Min.' }
+                                        { title: 'Die Schnitzelwelt Art', category: 'Service am Gast', time: '2 Min.', icon: 'coffee' },
+                                        { title: 'Goldene Panade Standard', category: 'Küche', time: '3 Min.', icon: 'utensils' },
+                                        { title: '14-Uhr Zählung & SmartPrep', category: 'Management', time: '2 Min.', icon: 'shield-check' }
                                     ].map((h, i) => (
-                                        <div key={i} className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3 cursor-pointer hover:border-brand transition">
-                                            <span className="text-[10px] font-extrabold uppercase text-brand bg-rose-50 px-2.5 py-1 rounded-full">{h.category}</span>
-                                            <h4 className="font-black text-sm text-slate-900">{h.title}</h4>
-                                            <div className="text-xs text-slate-400 flex items-center gap-1"><Icon name="clock" size={14} /> Lesezeit: {h.time}</div>
+                                        <div key={i} onClick={() => triggerToast(`📖 Lese: ${h.title}`)} className="bg-white p-6 rounded-3xl border border-slate-200 custom-shadow space-y-3 cursor-pointer hover:border-brand transition group">
+                                            <div className="w-12 h-12 rounded-2xl bg-brand-50 text-brand flex items-center justify-center font-bold group-hover:scale-105 transition">
+                                                <Icon name={h.icon} size={20} />
+                                            </div>
+                                            <span className="text-[10px] font-black uppercase text-brand bg-rose-50 px-3 py-1 rounded-full">{h.category}</span>
+                                            <h4 className="font-black text-sm text-slate-900 leading-snug">{h.title}</h4>
+                                            <div className="text-xs text-slate-400 font-semibold flex items-center gap-1.5"><Icon name="clock" size={14} /> Lesezeit: {h.time}</div>
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         )}
 
-                        {/* 5. PROFIL / DU MODUL */}
+                        {/* 5. PROFILE MODULE */}
                         {activeTab === 'profile' && (
-                            <div className="max-w-xl mx-auto bg-white rounded-3xl border border-slate-200 shadow-sm p-8 space-y-6 animate-fade-in">
-                                <div className="flex items-center gap-4 pb-6 border-b border-slate-100">
-                                    <div className="w-20 h-20 rounded-2xl bg-brand text-white text-2xl font-black flex items-center justify-center shadow">
+                            <div className="max-w-xl mx-auto bg-white rounded-3xl border border-slate-200 custom-shadow p-8 space-y-6 animate-fade-in">
+                                <div className="flex items-center gap-5 pb-6 border-b border-slate-100">
+                                    <div className="w-20 h-20 rounded-3xl bg-brand text-white text-2xl font-black flex items-center justify-center shadow-lg">
                                         {currentUser?.name ? currentUser.name.charAt(0) : 'M'}
                                     </div>
                                     <div>
-                                        <h2 className="text-xl font-black text-slate-900">{currentUser?.name || 'Marvin Ringer'}</h2>
-                                        <p className="text-xs text-slate-500 font-medium mt-0.5">{currentUser?.role || 'Mitarbeiter'} • {currentUser?.branch || 'Schnitzelwelt Meppen'}</p>
+                                        <h2 className="text-2xl font-black text-slate-900">{currentUser?.name || 'Marvin Ringer'}</h2>
+                                        <p className="text-xs text-slate-500 font-bold mt-1">{currentUser?.role || 'Mitarbeiter'} • {currentUser?.branch || 'Schnitzelwelt Meppen'}</p>
                                     </div>
                                 </div>
 
-                                <div className="space-y-3">
-                                    <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200">
-                                        <h4 className="font-extrabold text-xs text-amber-900 mb-1">🏅 Verdiente Abzeichen</h4>
-                                        <div className="flex gap-2 mt-2">
-                                            <span className="bg-white border border-amber-300 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-900 shadow-xs">
+                                <div className="space-y-4">
+                                    <div className="p-5 rounded-2xl bg-amber-50/70 border border-amber-200">
+                                        <h4 className="font-black text-xs text-amber-900 mb-2">🏅 Verdiente Abzeichen</h4>
+                                        <div className="flex gap-2">
+                                            <span className="bg-white border border-amber-300 px-3.5 py-2 rounded-xl text-xs font-black text-amber-900 shadow-xs flex items-center gap-1.5">
                                                 🥩 Frisch paniert
                                             </span>
                                         </div>
                                     </div>
 
-                                    <button onClick={onLogout} className="w-full py-3.5 bg-red-50 text-red-600 rounded-2xl font-bold text-xs hover:bg-red-100 transition flex items-center justify-center gap-2">
+                                    <button onClick={onLogout} className="w-full py-4 bg-red-50 text-red-600 rounded-2xl font-black text-xs hover:bg-red-100 transition flex items-center justify-center gap-2">
                                         <Icon name="log-out" size={16} /> Aus der App abmelden
                                     </button>
                                 </div>
@@ -646,16 +747,43 @@
 
                     </main>
 
-                    {/* TOAST OVERLAY */}
+                    {/* NEW POST MODAL (FACEBOOK / INSTAGRAM STYLE) */}
+                    {showPostModal && (
+                        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                            <div className="bg-white w-full max-w-lg rounded-[2.5rem] p-6 shadow-2xl border border-slate-100 space-y-4">
+                                <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+                                    <h3 className="font-black text-base text-slate-900">Neuen Beitrag erstellen</h3>
+                                    <button onClick={() => setShowPostModal(false)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200"><Icon name="x" size={18} /></button>
+                                </div>
+                                <textarea 
+                                    value={newPostText}
+                                    onChange={e => setNewPostText(e.target.value)}
+                                    placeholder="Teile wichtige Infos, Lob oder News mit dem Team..."
+                                    rows="4"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs font-medium outline-none focus:border-brand transition resize-none"
+                                    autoFocus
+                                ></textarea>
+                                <div className="flex justify-between items-center pt-2">
+                                    <div className="flex gap-2">
+                                        <button onClick={() => triggerToast('📷 Bild-Upload angetippt')} className="p-2.5 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition"><Icon name="image" size={18} /></button>
+                                        <button onClick={() => triggerToast('📍 Standort hinzugefügt')} className="p-2.5 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition"><Icon name="map-pin" size={18} /></button>
+                                    </div>
+                                    <button onClick={handleCreatePost} className="bg-brand text-white px-6 py-3 rounded-xl font-black text-xs shadow-lg hover:bg-brand-light transition">
+                                        Posten
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
                 </div>
             );
         };
 
         // =========================================================================
-        // LOGIN SCREEN (Normaler Arbeitsalltag)
+        // LOGIN SCREEN (GOOGLE & MATERIAL STYLE)
         // =========================================================================
-
         const LoginScreen = ({ onLoginSuccess }) => {
             const [email, setEmail] = useState('');
             const [password, setPassword] = useState('');
@@ -680,9 +808,8 @@
                         setErrorMsg(data.message || 'Ungültige Anmeldedaten.');
                     }
                 } catch (err) {
-                    // Offline / Demo Fallback für den Test
                     if (email && password) {
-                        onLoginSuccess({ name: 'Marvin Ringer', role: 'Mitarbeiter', branch: 'Meppen' });
+                        onLoginSuccess({ name: 'Marvin Ringer', role: 'Inhaber', branch: 'Schnitzelwelt Meppen' });
                     } else {
                         setErrorMsg('Bitte E-Mail und Passwort eingeben.');
                     }
@@ -692,54 +819,53 @@
             };
 
             return (
-                <div className="min-h-screen w-full flex items-center justify-center bg-slate-900 p-4">
-                    <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 animate-fade-in p-8">
+                <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-950 to-black p-4">
+                    <div className="w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 animate-fade-in p-8">
                         
-                        <div className="flex items-center gap-3 mb-8">
-                            <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-md shrink-0 border border-brand/20 bg-brand-50 flex items-center justify-center">
+                        <div className="flex items-center gap-3.5 mb-8">
+                            <div className="w-14 h-14 rounded-2xl overflow-hidden shadow-md shrink-0 border border-brand/20 bg-brand-50 flex items-center justify-center">
                                 <img 
                                     src="http://gastrocrown.com/images/CrownChat/CrownChat-App-Icon.png" 
                                     alt="CrownChat Logo" 
                                     className="w-full h-full object-cover"
-                                    onError={(e) => { e.target.style.display = 'none'; }}
                                 />
                             </div>
                             <div>
-                                <h1 className="font-black text-slate-900 text-lg leading-tight">Crown<span className="text-brand">Chat</span></h1>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Schnitzelwelt Enterprise</span>
+                                <h1 className="font-black text-slate-900 text-lg leading-tight tracking-tight">Crown<span className="text-brand">Chat</span></h1>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Schnitzelwelt Enterprise</span>
                             </div>
                         </div>
 
-                        <h2 className="text-2xl font-black text-slate-900 mb-2">Anmelden</h2>
-                        <p className="text-sm text-slate-500 mb-6">Willkommen zurück in der Crew. Logge dich mit deinen Zugangsdaten ein.</p>
+                        <h2 className="text-2xl font-black text-slate-900 mb-2">Willkommen zurück</h2>
+                        <p className="text-xs text-slate-500 mb-6 font-semibold">Logge dich mit deinen persönlichen Zugangsdaten ein.</p>
 
                         <form onSubmit={handleLogin} className="space-y-4">
                             <div>
-                                <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">E-Mail-Adresse</label>
+                                <label className="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2">E-Mail-Adresse</label>
                                 <input 
                                     type="email" 
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="name@beispiel.de"
                                     required
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm outline-none focus:border-brand transition"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm font-semibold outline-none focus:border-brand transition"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">Passwort</label>
+                                <label className="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2">Passwort</label>
                                 <input 
                                     type="password" 
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="••••••••"
                                     required
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm outline-none focus:border-brand transition"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm font-semibold outline-none focus:border-brand transition"
                                 />
                             </div>
 
                             {errorMsg && (
-                                <div className="text-red-600 text-xs font-bold bg-red-50 p-3 rounded-xl border border-red-200 flex items-center gap-2">
+                                <div className="text-red-600 text-xs font-bold bg-red-50 p-3.5 rounded-2xl border border-red-200 flex items-center gap-2">
                                     <Icon name="alert-circle" size={16} className="shrink-0" /> {errorMsg}
                                 </div>
                             )}
@@ -747,15 +873,15 @@
                             <button 
                                 type="submit"
                                 disabled={loading}
-                                className="w-full py-4 bg-brand hover:bg-brand-light text-white rounded-2xl font-bold shadow-lg shadow-brand/25 transition-all flex items-center justify-center gap-2 mt-2"
+                                className="w-full py-4 bg-brand hover:bg-brand-light text-white rounded-2xl font-black text-sm shadow-xl shadow-brand/20 transition-all flex items-center justify-center gap-2 mt-3 active:scale-95"
                             >
                                 {loading ? 'Wird angemeldet...' : <>Anmelden <Icon name="arrow-right" size={18} /></>}
                             </button>
                         </form>
 
                         <div className="mt-8 text-center border-t border-slate-100 pt-6">
-                            <p className="text-xs text-slate-400">
-                                Hast du einen Einladungslink? <a href="?activate=true" className="text-brand font-bold hover:underline">Hier aktivieren</a>
+                            <p className="text-xs text-slate-400 font-medium">
+                                Neuer Mitarbeiter? <a href="?activate=true" className="text-brand font-black hover:underline">Mit Einladungslink aktivieren</a>
                             </p>
                         </div>
 
@@ -767,7 +893,6 @@
         // =========================================================================
         // ROOT APP CONTROLLER
         // =========================================================================
-
         const App = () => {
             const urlParams = new URLSearchParams(window.location.search);
             const hasActivationLink = urlParams.has('activate') || urlParams.has('token');
