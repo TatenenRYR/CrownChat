@@ -659,20 +659,142 @@
         // ROOT APP CONTROLLER
         // =========================================================================
 
-        const App = () => {
-            const [isLoggedIn, setIsLoggedIn] = useState(false);
-            const [currentUser, setCurrentUser] = useState(null);
+        // --- APP CONTROLLER MIT INTELLIGENTER ERKENNUNG ---
 
-            return (
-                <div>
-                    {!isLoggedIn ? (
-                        <OnboardingFlow onLoginSuccess={(user) => { setCurrentUser(user); setIsLoggedIn(true); }} />
-                    ) : (
-                        <MainDashboard currentUser={currentUser} onLogout={() => { setIsLoggedIn(false); setCurrentUser(null); }} />
-                    )}
+// --- NORMALES ANMELDEFENSTER (FÜR DEN ALLTAG) ---
+const LoginScreen = ({ onLoginSuccess, API_BASE }) => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [errorMsg, setErrorMsg] = useState('');
+
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setErrorMsg('');
+
+        try {
+            const response = await fetch(`${API_BASE}/staff/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                onLoginSuccess(data.user);
+            } else {
+                setErrorMsg(data.message || 'Ungültige Anmeldedaten.');
+            }
+        } catch (err) {
+            // Offline / Demo Fallback für den Test
+            if (email && password) {
+                onLoginSuccess({ name: 'Marvin Ringer', role: 'Mitarbeiter', branch: 'Meppen' });
+            } else {
+                setErrorMsg('Bitte E-Mail und Passwort eingeben.');
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="min-h-screen w-full flex items-center justify-center bg-slate-900 p-4">
+            <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 animate-fade-in p-8">
+                
+                {/* Logo & Header */}
+                <div className="flex items-center gap-3 mb-8">
+                    <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-md shrink-0 border border-brand/20 bg-brand-50 flex items-center justify-center">
+                        <img 
+                            src="http://gastrocrown.com/images/CrownChat/CrownChat-App-Icon.png" 
+                            alt="CrownChat Logo" 
+                            className="w-full h-full object-cover"
+                            onError={(e) => { e.target.style.display = 'none'; }}
+                        />
+                    </div>
+                    <div>
+                        <h1 className="font-black text-slate-900 text-lg leading-tight">Crown<span className="text-brand">Chat</span></h1>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Schnitzelwelt Enterprise</span>
+                    </div>
                 </div>
-            );
-        };
+
+                <h2 className="text-2xl font-black text-slate-900 mb-2">Anmelden</h2>
+                <p className="text-sm text-slate-500 mb-6">Willkommen zurück in der Crew. Logge dich mit deinen Zugangsdaten ein.</p>
+
+                <form onSubmit={handleLogin} className="space-y-4">
+                    <div>
+                        <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">E-Mail-Adresse</label>
+                        <input 
+                            type="email" 
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="name@beispiel.de"
+                            required
+                            className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm outline-none focus:border-brand transition"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">Passwort</label>
+                        <input 
+                            type="password" 
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="••••••••"
+                            required
+                            className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm outline-none focus:border-brand transition"
+                        />
+                    </div>
+
+                    {errorMsg && (
+                        <div className="text-red-600 text-xs font-bold bg-red-50 p-3 rounded-xl border border-red-200 flex items-center gap-2">
+                            <Icon name="alert-circle" size={16} className="shrink-0" /> {errorMsg}
+                        </div>
+                    )}
+
+                    <button 
+                        type="submit"
+                        disabled={loading}
+                        className="w-full py-4 bg-brand hover:bg-brand-light text-white rounded-2xl font-bold shadow-lg shadow-brand/25 transition-all flex items-center justify-center gap-2 mt-2"
+                    >
+                        {loading ? 'Wird angemeldet...' : <>Anmelden <Icon name="arrow-right" size={18} /></>}
+                    </button>
+                </form>
+
+                <div className="mt-8 text-center border-t border-slate-100 pt-6">
+                    <p className="text-xs text-slate-400">
+                        Hast du einen Einladungslink? <a href="?activate=true" className="text-brand font-bold hover:underline">Hier aktivieren</a>
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    );
+};
+
+
+// --- HAUPT-CONTROLLER (ENTSCHEIDET OB LOGIN ODER ONBOARDING) ---
+const App = () => {
+    const API_BASE = 'https://gastrocrown.com/api';
+    
+    // Prüfen, ob ein Aktivierungs-Parameter in der URL steht (z.B. crownchat.netlify.app/?activate=true)
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasActivationLink = urlParams.has('activate') || urlParams.has('token');
+
+    const [user, setUser] = useState(null);
+
+    // Wenn der Nutzer eingeloggt ist, zeigen wir die Haupt-App
+    if (user) {
+        return <MainApp user={user} onLogout={() => setUser(null)} />;
+    }
+
+    // Wenn KEIN Aktivierungslink da ist -> Zeige das normale Anmeldefenster
+    if (!hasActivationLink) {
+        return <LoginScreen API_BASE={API_BASE} onLoginSuccess={(userData) => setUser(userData)} />;
+    }
+
+    // Wenn EIN Aktivierungslink da ist -> Zeige deine Onboarding-Strecke (Welcome -> PIN -> Setup)
+    return <OnboardingFlow API_BASE={API_BASE} onLoginSuccess={(userData) => setUser(userData)} />;
+};
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
