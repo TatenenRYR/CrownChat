@@ -2,8 +2,8 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CrownChat - Schnitzelwelt Mitarbeiter-App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrownChat - GastroCrown Enterprise Dashboard</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -44,7 +44,8 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0f172a;
+            background-color: #f8fafc;
+            color: #1e293b;
             margin: 0;
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
@@ -53,15 +54,15 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(6px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-fade-in {
-            animation: fadeIn 0.4s ease-out forwards;
+            animation: fadeIn 0.3s ease-out forwards;
         }
         .material-input:focus-within {
             border-color: #8B0000;
-            box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.1);
+            box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.12);
         }
     </style>
 </head>
@@ -72,7 +73,7 @@
         const { useState, useEffect, useRef } = React;
 
         // --- ICON HELPER ---
-        const Icon = ({ name, size = 24, className = "", strokeWidth = 2 }) => {
+        const Icon = ({ name, size = 20, className = "", strokeWidth = 2 }) => {
             const spanRef = useRef(null);
             
             useEffect(() => {
@@ -89,74 +90,64 @@
         };
 
         // --- BACKEND API CONFIGURATION ---
-        // Dynamisch anbindbar an deinen echten GastroCrown Server (z.B. https://gastrocrown.com/api)
         const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : 'https://gastrocrown.com/api';
 
-        // --- ONBOARDING FLOW ---
+        // --- TOAST NOTIFICATION COMPONENT ---
+        const Toast = ({ message, type = 'info', onClose }) => {
+            useEffect(() => {
+                const timer = setTimeout(onClose, 4000);
+                return () => clearTimeout(timer);
+            }, [onClose]);
 
-        const OnboardingWelcome = ({ onNext }) => (
-            <div className="flex flex-col items-center justify-center h-full p-6 text-center animate-fade-in bg-white">
-                <div className="w-24 h-24 bg-brand-50 rounded-full flex items-center justify-center mb-8 shadow-sm border border-brand-100">
-                    <Icon name="qr-code" size={48} className="text-brand" />
+            return (
+                <div className={`fixed bottom-6 right-6 z-50 px-5 py-3.5 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-3 animate-fade-in border ${type === 'error' ? 'bg-red-600 text-white border-red-700' : 'bg-slate-900 text-white border-slate-700'}`}>
+                    <Icon name={type === 'error' ? 'alert-circle' : 'check-circle-2'} size={18} className={type === 'error' ? 'text-white' : 'text-emerald-400'} />
+                    <span>{message}</span>
                 </div>
-                <h1 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">CrownChat</h1>
-                <h2 className="text-lg font-semibold text-gray-700 mb-4">Willkommen im Team!</h2>
-                
-                <div className="bg-brand-50 border border-brand-100 rounded-2xl p-4 mb-10 w-full max-w-xs relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-brand"></div>
-                    <p className="text-sm text-gray-700 font-medium leading-relaxed">
-                        Dein persönlicher Einladungslink wurde erfolgreich gescannt.
-                    </p>
-                    <div className="mt-3 inline-flex items-center gap-1.5 bg-brand text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full">
-                        <Icon name="clock" size={12} />
-                        Nur 2 Tage gültig
-                    </div>
-                </div>
+            );
+        };
 
-                <button 
-                    onClick={onNext}
-                    className="w-full max-w-xs py-3.5 bg-brand hover:bg-brand-light text-white rounded-xl font-bold shadow-lg shadow-brand/35 transition-all active:scale-95 flex items-center justify-center gap-2"
-                >
-                    Registrierung starten <Icon name="arrow-right" size={18} />
-                </button>
-            </div>
-        );
+        // =========================================================================
+        // ONBOARDING MODULE (QR-Invite -> Pin Gatekeeper -> Setup & DSGVO)
+        // =========================================================================
 
-        const OnboardingGatekeeper = ({ onAuthenticated }) => {
-            const [personalNr, setPersonalNr] = useState('');
+        const OnboardingFlow = ({ onLoginSuccess }) => {
+            const [step, setStep] = useState(1); // 1: Welcome, 2: Gatekeeper, 3: Setup
             const [pin, setPin] = useState('');
+            const [staffData, setStaffData] = useState(null);
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+            const [accepted, setAccepted] = useState(false);
             const [loading, setLoading] = useState(false);
             const [errorMsg, setErrorMsg] = useState('');
 
-            const handleLogin = async (e) => {
+            const handlePinSubmit = async (e) => {
                 e.preventDefault();
                 if (!pin || pin.length < 4) {
                     setErrorMsg('Bitte gib deine 4-stellige GastroCrown Kassen-PIN ein.');
                     return;
                 }
-
                 setLoading(true);
                 setErrorMsg('');
 
                 try {
-                    // Verbindug zum echten GastroCrown Backend (staffRoutes.js /login-pin)
                     const response = await fetch(`${API_BASE}/staff/login-pin`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ pin: pin.trim(), appId: 'schnitzelwelt' })
                     });
-                    
                     const data = await response.json();
-                    
                     if (response.ok && data.success) {
-                        onAuthenticated(data.user);
+                        setStaffData(data.user);
+                        setStep(3);
                     } else {
-                        setErrorMsg(data.message || 'PIN falsch oder Account nicht im Personalstamm gefunden.');
+                        setErrorMsg(data.message || 'PIN ungültig oder Mitarbeiter nicht im Stamm gefunden.');
                     }
                 } catch (err) {
-                    // Fallback für den Testmodus im Browser, falls Backend offline
+                    // Offline / Demo Fallback
                     if (pin === '1414' || pin === '1234') {
-                        onAuthenticated({ id: 99, name: 'Marvin Ringer', role: 'user', branch: 'Schnitzelwelt Meppen' });
+                        setStaffData({ id: 99, name: 'Marvin Ringer', role: 'Mitarbeiter', branch: 'Schnitzelwelt Meppen' });
+                        setStep(3);
                     } else {
                         setErrorMsg('Verbindungsfehler zum GastroCrown Server. (Test-PIN: 1414)');
                     }
@@ -165,362 +156,516 @@
                 }
             };
 
-            return (
-                <div className="flex flex-col h-full bg-white animate-fade-in">
-                    <div className="p-6 pt-12 pb-6 flex flex-col items-center border-b border-gray-100">
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                            <Icon name="shield-check" size={32} className="text-gray-700" />
-                        </div>
-                        <h2 className="text-2xl font-black text-gray-900">Türsteher-Check</h2>
-                        <p className="text-sm text-gray-500 mt-2 text-center">Gleiche deine GastroCrown Daten ab.</p>
-                    </div>
-
-                    <form onSubmit={handleLogin} className="p-6 flex-1 flex flex-col">
-                        <div className="space-y-5 flex-1">
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Personalnummer (Optional)</label>
-                                <div className="material-input flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 transition-all">
-                                    <Icon name="hash" size={18} className="text-gray-400 mr-3" />
-                                    <input 
-                                        type="text" 
-                                        value={personalNr}
-                                        onChange={(e) => setPersonalNr(e.target.value)}
-                                        placeholder="z.B. 1414"
-                                        className="bg-transparent w-full outline-none text-gray-800 font-medium"
-                                    />
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">4-stellige Kassen-PIN</label>
-                                <div className="material-input flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 transition-all">
-                                    <Icon name="lock" size={18} className="text-gray-400 mr-3" />
-                                    <input 
-                                        type="password" 
-                                        value={pin}
-                                        onChange={(e) => setPin(e.target.value)}
-                                        placeholder="••••"
-                                        maxLength="4"
-                                        className="bg-transparent w-full outline-none text-gray-800 font-black tracking-widest text-lg"
-                                    />
-                                </div>
-                            </div>
-
-                            {errorMsg && (
-                                <div className="text-red-500 text-xs font-bold flex items-center gap-1.5 bg-red-50 p-3 rounded-xl border border-red-100 animate-fade-in">
-                                    <Icon name="alert-circle" size={14} className="shrink-0" /> {errorMsg}
-                                </div>
-                            )}
-                        </div>
-
-                        <button 
-                            type="submit"
-                            disabled={loading}
-                            className="w-full py-4 bg-gray-900 hover:bg-black text-white rounded-xl font-bold shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 mt-auto"
-                        >
-                            {loading ? <span className="animate-pulse">Prüfe Daten...</span> : <><Icon name="unlock" size={18} /> Sicher freischalten</>}
-                        </button>
-                    </form>
-                </div>
-            );
-        };
-
-        const OnboardingSetup = ({ user, onComplete }) => {
-            const [email, setEmail] = useState('');
-            const [password, setPassword] = useState('');
-            const [accepted, setAccepted] = useState(false);
-            const [loading, setLoading] = useState(false);
-
-            const handleSubmit = async (e) => {
+            const handleSetupSubmit = async (e) => {
                 e.preventDefault();
                 if (!email || !password || !accepted) return;
-
                 setLoading(true);
+
                 try {
-                    // Speichert die E-Mail & verknüpft das Passwort DSGVO-konform im Backend
                     await fetch(`${API_BASE}/crownchat/register-setup`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ staffId: user?.id, email, password })
+                        body: JSON.stringify({ staffId: staffData?.id, email, password })
                     });
-                } catch (e) {
-                    // Offline Fallback
-                }
+                } catch (err) {}
+
                 setTimeout(() => {
                     setLoading(false);
-                    onComplete();
-                }, 600);
+                    onLoginSuccess(staffData || { name: 'Marvin Ringer', role: 'Mitarbeiter', branch: 'Meppen' });
+                }, 500);
             };
 
             return (
-                <div className="flex flex-col h-full bg-white animate-fade-in">
-                    <div className="p-6 pt-12 pb-6 flex flex-col items-center border-b border-gray-100">
-                        <div className="w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center mb-4 border border-brand-100">
-                            <Icon name="user-plus" size={32} className="text-brand" />
-                        </div>
-                        <h2 className="text-2xl font-black text-gray-900">Konto einrichten</h2>
-                        <p className="text-sm text-gray-500 mt-2 text-center">Identität bestätigt. Lege deine Login-Daten fest.</p>
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="p-6 flex-1 flex flex-col">
-                        <div className="space-y-4 flex-1">
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Private E-Mail Adresse</label>
-                                <div className="material-input flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 transition-all">
-                                    <Icon name="mail" size={18} className="text-gray-400 mr-3" />
-                                    <input 
-                                        type="email" 
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        placeholder="name@beispiel.de"
-                                        className="bg-transparent w-full outline-none text-gray-800 font-medium"
-                                        required
-                                    />
+                <div className="min-h-screen w-full flex items-center justify-center bg-slate-900 p-4">
+                    <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 animate-fade-in">
+                        
+                        {step === 1 && (
+                            <div className="p-8 text-center space-y-6">
+                                <div className="w-20 h-20 bg-brand-50 text-brand rounded-2xl flex items-center justify-center mx-auto shadow-sm border border-brand-100">
+                                    <Icon name="qr-code" size={40} />
                                 </div>
-                            </div>
-                            
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Passwort für die App</label>
-                                <div className="material-input flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 transition-all">
-                                    <Icon name="key" size={18} className="text-gray-400 mr-3" />
-                                    <input 
-                                        type="password" 
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        placeholder="Mindestens 8 Zeichen"
-                                        className="bg-transparent w-full outline-none text-gray-800 font-medium"
-                                        required
-                                    />
+                                <div>
+                                    <h1 className="text-2xl font-black text-slate-900 tracking-tight">CrownChat</h1>
+                                    <p className="text-sm text-slate-500 mt-1">Das offizielle Mitarbeiter-Dashboard</p>
                                 </div>
+                                <div className="bg-brand-50 border border-brand-100 rounded-2xl p-4 text-left">
+                                    <div className="flex items-center gap-2 text-brand font-bold text-xs uppercase tracking-wider mb-1">
+                                        <Icon name="clock" size={14} /> 48h Einladungslink aktiv
+                                    </div>
+                                    <p className="text-xs text-slate-600 leading-relaxed">
+                                        Dein QR-Code wurde erfolgreich gescannt. Starte jetzt die einmalige Verifizierung mit deiner Kassen-PIN.
+                                    </p>
+                                </div>
+                                <button 
+                                    onClick={() => setStep(2)}
+                                    className="w-full py-4 bg-brand hover:bg-brand-light text-white rounded-2xl font-bold shadow-lg shadow-brand/25 transition-all flex items-center justify-center gap-2"
+                                >
+                                    Identifikation starten <Icon name="arrow-right" size={18} />
+                                </button>
                             </div>
+                        )}
 
-                            <div className="pt-4">
-                                <label className="flex items-start gap-3 cursor-pointer group">
-                                    <div className="relative flex items-center justify-center mt-0.5">
+                        {step === 2 && (
+                            <form onSubmit={handlePinSubmit} className="p-8 space-y-6">
+                                <div className="text-center">
+                                    <div className="w-16 h-16 bg-slate-100 text-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                                        <Icon name="shield-check" size={32} />
+                                    </div>
+                                    <h2 className="text-xl font-black text-slate-900">Türsteher-Check</h2>
+                                    <p className="text-xs text-slate-500 mt-1">Gleiche deine Daten mit der GastroCrown Datenbank ab.</p>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">4-stellige Kassen-PIN</label>
+                                        <div className="material-input flex items-center bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 transition-all">
+                                            <Icon name="lock" size={18} className="text-slate-400 mr-3" />
+                                            <input 
+                                                type="password" 
+                                                value={pin}
+                                                onChange={(e) => setPin(e.target.value)}
+                                                placeholder="••••"
+                                                maxLength="4"
+                                                autoFocus
+                                                className="bg-transparent w-full outline-none text-slate-900 font-black tracking-widest text-lg"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {errorMsg && (
+                                        <div className="text-red-600 text-xs font-bold bg-red-50 p-3 rounded-xl border border-red-200 flex items-center gap-2">
+                                            <Icon name="alert-circle" size={16} className="shrink-0" /> {errorMsg}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <button 
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full py-4 bg-slate-900 hover:bg-black text-white rounded-2xl font-bold shadow-lg transition-all flex items-center justify-center gap-2"
+                                >
+                                    {loading ? 'Prüfe Personalstamm...' : <><Icon name="unlock" size={18} /> PIN bestätigen</>}
+                                </button>
+                            </form>
+                        )}
+
+                        {step === 3 && (
+                            <form onSubmit={handleSetupSubmit} className="p-8 space-y-5">
+                                <div className="text-center">
+                                    <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-emerald-100">
+                                        <Icon name="user-check" size={32} />
+                                    </div>
+                                    <h2 className="text-xl font-black text-slate-900">Konto einrichten</h2>
+                                    <p className="text-xs text-slate-500 mt-1">Identität für <b>{staffData?.name || 'Mitarbeiter'}</b> bestätigt.</p>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">Private E-Mail Adresse</label>
+                                        <div className="material-input flex items-center bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 transition-all">
+                                            <Icon name="mail" size={18} className="text-slate-400 mr-3" />
+                                            <input 
+                                                type="email" 
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
+                                                placeholder="name@beispiel.de"
+                                                required
+                                                className="bg-transparent w-full outline-none text-slate-900 text-sm font-medium"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">App-Passwort festlegen</label>
+                                        <div className="material-input flex items-center bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 transition-all">
+                                            <Icon name="key" size={18} className="text-slate-400 mr-3" />
+                                            <input 
+                                                type="password" 
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
+                                                placeholder="Mindestens 8 Zeichen"
+                                                required
+                                                className="bg-transparent w-full outline-none text-slate-900 text-sm font-medium"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <label className="flex items-start gap-3 pt-2 cursor-pointer">
                                         <input 
                                             type="checkbox" 
                                             checked={accepted}
                                             onChange={(e) => setAccepted(e.target.checked)}
-                                            className="appearance-none w-5 h-5 border-2 border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-brand/50 checked:bg-brand checked:border-brand transition-colors cursor-pointer"
+                                            className="mt-1 w-4 h-4 accent-[#8B0000] rounded cursor-pointer"
                                         />
-                                        {accepted && <Icon name="check" size={14} className="text-white absolute pointer-events-none" strokeWidth={3} />}
-                                    </div>
-                                    <span className="text-xs text-gray-600 leading-relaxed font-medium">
-                                        Ich stimme zu, dass meine E-Mail DSGVO-konform für den App-Login gespeichert wird.
-                                    </span>
-                                </label>
-                            </div>
-                        </div>
+                                        <span className="text-xs text-slate-600 leading-relaxed">
+                                            Ich stimme der DSGVO-konformen Speicherung meiner E-Mail-Adresse für den App-Login zu.
+                                        </span>
+                                    </label>
+                                </div>
 
-                        <button 
-                            type="submit"
-                            disabled={!accepted || !email || !password || loading}
-                            className={`w-full py-4 rounded-xl font-bold shadow-lg transition-all flex items-center justify-center gap-2 mt-auto ${accepted && email && password ? 'bg-brand hover:bg-brand-light text-white active:scale-95' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
-                        >
-                            {loading ? 'Aktiviere Konto...' : 'Konto aktivieren'} <Icon name="check-circle" size={18} />
-                        </button>
-                    </form>
+                                <button 
+                                    type="submit"
+                                    disabled={!accepted || !email || !password || loading}
+                                    className={`w-full py-4 rounded-2xl font-bold shadow-lg transition-all flex items-center justify-center gap-2 ${accepted && email && password ? 'bg-brand hover:bg-brand-light text-white' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
+                                >
+                                    {loading ? 'Aktiviere...' : 'Konto aktivieren & Starten'} <Icon name="check-circle" size={18} />
+                                </button>
+                            </form>
+                        )}
+
+                    </div>
                 </div>
             );
         };
 
-        // --- MAIN APP TABS ---
+        // =========================================================================
+        // MAIN APPLICATION (Vollbild Dashboard mit allen 5 Modulen)
+        // =========================================================================
 
-        const TabFeed = () => (
-            <div className="animate-fade-in pb-20">
-                <div className="bg-white px-5 pt-6 pb-4 sticky top-0 z-10 border-b border-gray-100">
-                    <div className="flex justify-between items-center">
-                        <h2 className="text-2xl font-black text-gray-900 tracking-tight">Crown<span className="text-brand">Chat</span></h2>
-                        <div className="flex gap-3">
-                            <button className="w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition"><Icon name="search" size={18} /></button>
-                            <button className="w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition relative">
-                                <Icon name="bell" size={18} />
-                                <span className="absolute top-2 right-2 w-2 h-2 bg-brand rounded-full"></span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+        const MainDashboard = ({ currentUser, onLogout }) => {
+            const [activeTab, setActiveTab] = useState('feed'); // feed, chat, schedule, hub, profile
+            const [toast, setToast] = useState(null);
 
-                <div className="bg-white px-4 py-5 mb-2 flex gap-4 overflow-x-auto no-scrollbar border-b border-gray-100">
-                    <div className="flex flex-col items-center gap-1.5 shrink-0">
-                        <div className="w-16 h-16 rounded-full bg-gray-100 border border-dashed border-gray-300 flex items-center justify-center text-gray-400 relative">
-                            <Icon name="plus" size={24} />
-                        </div>
-                        <span className="text-[10px] font-bold text-gray-500">Neu</span>
-                    </div>
-                    {['Schnitzelwelt', 'Küche Meppen', 'Service Team'].map((name, i) => (
-                        <div key={i} className="flex flex-col items-center gap-1.5 shrink-0">
-                            <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-yellow-400 via-brand to-purple-500">
-                                <div className="w-full h-full rounded-full border-2 border-white overflow-hidden bg-white">
-                                    <img src={`https://placehold.co/100x100/eeeeee/8B0000?text=${name[0]}`} className="w-full h-full object-cover" alt="story" />
-                                </div>
-                            </div>
-                            <span className="text-[10px] font-medium text-gray-700 w-16 truncate text-center">{name}</span>
-                        </div>
-                    ))}
-                </div>
+            // Feed States
+            const [posts, setPosts] = useState([
+                {
+                    id: 1,
+                    author: 'Enno Knuth',
+                    role: 'Inhaber',
+                    date: 'Heute, 09:15',
+                    channel: '🍽️ Schnitzel-Talk',
+                    important: true,
+                    text: '🎉 Verstärkung für unsere Schnitzelwelt-Küche! Wir freuen uns auf unseren neuen Küchenchef Markus ab 1. November! 🥩👑',
+                    likes: 5,
+                    liked: false,
+                    seenBy: ['Marvin', 'Marina Jänen', 'Amara', 'Enno'],
+                    comments: [{ id: 1, user: 'Marina Jänen', text: 'Herzlich willkommen! 🙌' }]
+                }
+            ]);
+            const [newPostText, setNewPostText] = useState('');
+            const [showPostModal, setShowPostModal] = useState(false);
+            const [activeStory, setActiveStory] = useState(null);
 
-                <div className="bg-white p-5 border-b border-gray-100">
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="flex gap-3 items-center">
-                            <div className="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-brand font-bold">EK</div>
-                            <div>
-                                <h4 className="font-bold text-sm text-gray-900">Enno Knuth</h4>
-                                <span className="text-xs text-gray-500">Gerade eben • Allgemein</span>
-                            </div>
-                        </div>
-                        <button className="text-gray-400 hover:text-gray-600"><Icon name="more-horizontal" size={20} /></button>
-                    </div>
-                    <p className="text-sm text-gray-800 leading-relaxed mb-4">
-                        🎉 Verstärkung für unsere Schnitzelwelt-Küche! Wir freuen uns auf unseren neuen Küchenchef Markus! 🥩👑
-                    </p>
-                    <div className="rounded-xl overflow-hidden mb-4 bg-gray-100 h-48">
-                        <img src="https://placehold.co/400x200/e5e7eb/a3a3a3?text=Team+Foto" className="w-full h-full object-cover" />
-                    </div>
-                </div>
-            </div>
-        );
+            // Chat States
+            const [selectedChat, setSelectedChat] = useState({ id: 1, name: '🍳 Küchen-Team Meppen', unread: 0, messages: [
+                { id: 1, sender: 'GastroCrown Bot', text: '14-Uhr Zählung in Meppen abgeschlossen.', time: '14:05', isMe: false }
+            ]});
+            const [chatInput, setChatInput] = useState('');
 
-        const TabChat = () => (
-            <div className="animate-fade-in flex flex-col h-full bg-white">
-                <div className="px-5 pt-6 pb-4 border-b border-gray-100 flex justify-between items-center">
-                    <h2 className="text-2xl font-black text-gray-900 tracking-tight">Nachrichten</h2>
-                    <button className="w-10 h-10 rounded-full bg-brand text-white flex items-center justify-center shadow-md"><Icon name="plus" size={20} /></button>
-                </div>
-                <div className="p-4 space-y-1">
-                    {[
-                        { name: 'Küche Meppen', msg: 'Zählung ist durch! ✅', time: '14:30', unread: 2, isGroup: true },
-                        { name: 'Marina Jänen', msg: 'Brauchen noch Servietten vorne.', time: '11:15', unread: 0, isGroup: false }
-                    ].map((chat, i) => (
-                        <div key={i} className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-2xl cursor-pointer">
-                            <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold bg-brand">{chat.name.charAt(0)}</div>
-                            <div className="flex-1">
-                                <div className="flex justify-between font-bold text-sm text-gray-900"><span>{chat.name}</span><span className="text-[10px] text-gray-400">{chat.time}</span></div>
-                                <p className="text-xs text-gray-500 truncate mt-0.5">{chat.msg}</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        );
+            // Hub States
+            const [activeCourse, setActiveCourse] = useState(null);
+            const [swipeVal, setSwipeVal] = useState(0);
 
-        const TabSchedule = () => (
-            <div className="animate-fade-in bg-gray-50 h-full pb-20">
-                <div className="bg-white px-5 pt-6 pb-4 border-b border-gray-100">
-                    <h2 className="text-2xl font-black text-gray-900 tracking-tight">Dienstplan</h2>
-                </div>
-                <div className="p-5 space-y-4">
-                    <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm border-l-4 border-l-brand">
-                        <span className="text-xs font-bold text-brand bg-brand-50 px-2 py-1 rounded">Front of House</span>
-                        <h4 className="font-black text-lg text-gray-900 mt-2">09:00 - 17:00</h4>
-                        <p className="text-sm text-gray-500 mt-1 flex items-center gap-1.5"><Icon name="map-pin" size={14} /> Schnitzelwelt Meppen</p>
-                    </div>
-                </div>
-            </div>
-        );
-
-        const TabHub = () => (
-            <div className="animate-fade-in bg-gray-50 h-full pb-20">
-                <div className="bg-white px-5 pt-6 pb-4 border-b border-gray-100">
-                    <h2 className="text-2xl font-black text-gray-900 tracking-tight">Hub</h2>
-                </div>
-                <div className="p-5">
-                    <div className="bg-brand text-white rounded-2xl p-4 mb-6 shadow-lg">
-                        <h3 className="font-bold text-sm">Willkommen bei Schnitzelwelt</h3>
-                        <p className="text-xs opacity-80 mt-1">Dein Einarbeitungskurs ist bereit</p>
-                    </div>
-                </div>
-            </div>
-        );
-
-        const TabProfile = ({ user }) => (
-            <div className="animate-fade-in bg-white h-full pb-20">
-                <div className="px-5 pt-8 pb-6 border-b border-gray-100 flex items-center gap-4 bg-gray-50">
-                    <div className="w-20 h-20 rounded-full bg-brand flex items-center justify-center text-white text-2xl font-black shadow-md border-4 border-white">
-                        {user?.name ? user.name.charAt(0) : 'M'}
-                    </div>
-                    <div>
-                        <h2 className="text-2xl font-black text-gray-900 tracking-tight">{user?.name || 'Marvin'}</h2>
-                        <p className="text-sm text-gray-500 font-medium mt-0.5">{user?.role || 'Mitarbeiter'} • {user?.branch || 'Meppen'}</p>
-                    </div>
-                </div>
-            </div>
-        );
-
-        // --- MAIN APP WRAPPER ---
-
-        const MainApp = ({ user }) => {
-            const [activeTab, setActiveTab] = useState('feed');
-
-            const tabs = [
-                { id: 'feed', icon: 'home', label: 'Feed' },
-                { id: 'chat', icon: 'message-circle', label: 'Chat' },
-                { id: 'schedule', icon: 'calendar', label: 'Dienstplan' },
-                { id: 'hub', icon: 'book-open', label: 'Hub' },
-                { id: 'profile', icon: 'user', label: 'Du' }
-            ];
+            const triggerToast = (msg, type = 'info') => setToast({ message: msg, type });
 
             return (
-                <div className="flex flex-col h-full relative bg-white animate-fade-in">
-                    <div className="flex-1 overflow-y-auto no-scrollbar relative">
-                        {activeTab === 'feed' && <TabFeed />}
-                        {activeTab === 'chat' && <TabChat />}
-                        {activeTab === 'schedule' && <TabSchedule />}
-                        {activeTab === 'hub' && <TabHub />}
-                        {activeTab === 'profile' && <TabProfile user={user} />}
-                    </div>
+                <div className="min-h-screen bg-slate-100 flex flex-col">
+                    
+                    {/* TOP NAVIGATION HEADER */}
+                    <header className="bg-white border-b border-slate-200 px-6 py-3.5 flex justify-between items-center sticky top-0 z-40 shadow-xs">
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-brand text-white rounded-xl flex items-center justify-center font-black shadow">
+                                <Icon name="crown" size={22} />
+                            </div>
+                            <div>
+                                <h1 className="font-black text-slate-900 text-base leading-tight">Crown<span className="text-brand">Chat</span></h1>
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Schnitzelwelt Enterprise</span>
+                            </div>
+                        </div>
 
-                    <div className="absolute bottom-0 w-full h-16 bg-white border-t border-gray-200 flex justify-around items-center z-50 px-2 pb-safe">
-                        {tabs.map(tab => {
-                            const isActive = activeTab === tab.id;
-                            return (
-                                <button 
+                        {/* NAV TABS */}
+                        <nav className="hidden md:flex items-center gap-1 bg-slate-100 p-1 rounded-2xl">
+                            {[
+                                { id: 'feed', label: 'Feed', icon: 'megaphone' },
+                                { id: 'chat', label: 'Chat', icon: 'message-square' },
+                                { id: 'schedule', label: 'Dienstplan', icon: 'calendar' },
+                                { id: 'hub', label: 'Hub & Academy', icon: 'book-open' },
+                                { id: 'profile', label: 'Du / Profil', icon: 'user' }
+                            ].map(tab => (
+                                <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`flex flex-col items-center justify-center w-16 h-full transition-colors ${isActive ? 'text-brand' : 'text-gray-400 hover:text-gray-600'}`}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeTab === tab.id ? 'bg-white text-brand shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
                                 >
-                                    <Icon name={tab.icon} size={24} className={isActive ? 'mb-0.5' : 'mb-0.5 opacity-80'} strokeWidth={isActive ? 2.5 : 2} />
-                                    <span className={`text-[10px] ${isActive ? 'font-bold' : 'font-medium'}`}>{tab.label}</span>
+                                    <Icon name={tab.icon} size={16} /> {tab.label}
                                 </button>
-                            );
-                        })}
+                            ))}
+                        </nav>
+
+                        {/* USER PROFILE INFO */}
+                        <div className="flex items-center gap-3">
+                            <div className="text-right hidden sm:block">
+                                <div className="text-xs font-bold text-slate-900">{currentUser?.name || 'Marvin Ringer'}</div>
+                                <div className="text-[10px] font-medium text-emerald-600">Online • Meppen</div>
+                            </div>
+                            <div onClick={onLogout} title="Abmelden" className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-700 flex items-center justify-center cursor-pointer transition">
+                                <Icon name="log-out" size={18} />
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* MOBILE BOTTOM NAVIGATION (für kleine Bildschirme) */}
+                    <div className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 flex justify-around p-2 z-40 shadow-lg">
+                        {[
+                            { id: 'feed', label: 'Feed', icon: 'megaphone' },
+                            { id: 'chat', label: 'Chat', icon: 'message-square' },
+                            { id: 'schedule', label: 'Plan', icon: 'calendar' },
+                            { id: 'hub', label: 'Hub', icon: 'book-open' },
+                            { id: 'profile', label: 'Du', icon: 'user' }
+                        ].map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`flex flex-col items-center p-2 rounded-xl ${activeTab === tab.id ? 'text-brand font-bold' : 'text-slate-400'}`}
+                            >
+                                <Icon name={tab.icon} size={20} />
+                                <span className="text-[9px] mt-0.5">{tab.label}</span>
+                            </button>
+                        ))}
                     </div>
+
+                    {/* MAIN CONTENT AREA */}
+                    <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 pb-24 md:pb-8">
+                        
+                        {/* 1. FEED MODUL */}
+                        {activeTab === 'feed' && (
+                            <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
+                                
+                                {/* 24h Stories Bar */}
+                                <div className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm flex items-center gap-4 overflow-x-auto no-scrollbar">
+                                    <div className="flex flex-col items-center shrink-0 cursor-pointer" onClick={() => setShowPostModal(true)}>
+                                        <div className="w-14 h-14 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition">
+                                            <Icon name="plus" size={24} />
+                                        </div>
+                                        <span className="text-[11px] font-bold text-slate-700 mt-1">Beitrag</span>
+                                    </div>
+                                    {[
+                                        { name: 'Schnitzelwelt', img: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=150&auto=format&fit=crop&q=80', text: '🔥 Heute 18 Uhr: Kurzes Team-Briefing!' },
+                                        { name: 'Küche Meppen', img: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=150&auto=format&fit=crop&q=80', text: '✅ Kühlhaus-Check erfolgreich bestanden!' }
+                                    ].map((s, idx) => (
+                                        <div key={idx} onClick={() => setActiveStory(s)} className="flex flex-col items-center shrink-0 cursor-pointer group">
+                                            <div className="w-14 h-14 rounded-full p-[2.5px] bg-gradient-to-tr from-amber-500 via-brand to-pink-500 group-hover:scale-105 transition">
+                                                <img src={s.img} className="w-full h-full rounded-full object-cover border-2 border-white" />
+                                            </div>
+                                            <span className="text-[11px] font-bold text-slate-700 mt-1 truncate w-16 text-center">{s.name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Feed Posts */}
+                                <div className="space-y-4">
+                                    {posts.map(post => (
+                                        <div key={post.id} className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 space-y-4">
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-12 h-12 rounded-2xl bg-brand-50 text-brand font-black flex items-center justify-center border border-brand-100">
+                                                        {post.author.charAt(0)}
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-extrabold text-sm text-slate-900">{post.author} <span className="text-xs font-medium text-slate-400">({post.role})</span></h4>
+                                                        <span className="text-xs text-slate-500">{post.date} in <b className="text-slate-700">{post.channel}</b></span>
+                                                    </div>
+                                                </div>
+                                                {post.important && (
+                                                    <span className="bg-rose-50 text-brand text-[10px] font-black uppercase px-3 py-1 rounded-full border border-rose-200">
+                                                        📌 Wichtig
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-line">{post.text}</p>
+
+                                            <div className="flex justify-between items-center pt-4 border-t border-slate-100">
+                                                <div className="flex items-center gap-3">
+                                                    <button 
+                                                        onClick={() => {
+                                                            setPosts(posts.map(p => p.id === post.id ? { ...p, likes: p.liked ? p.likes - 1 : p.likes + 1, liked: !p.liked } : p));
+                                                        }}
+                                                        className={`px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition ${post.liked ? 'bg-rose-100 text-brand' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+                                                    >
+                                                        <Icon name="heart" size={16} /> {post.likes}
+                                                    </button>
+                                                    <span className="text-xs font-bold text-slate-500 flex items-center gap-1">
+                                                        <Icon name="message-circle" size={16} /> {post.comments.length} Kommentare
+                                                    </span>
+                                                </div>
+
+                                                <div className="text-xs font-bold text-slate-400 flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+                                                    <Icon name="eye" size={15} /> {post.seenBy.length} Gesehen
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 2. CHAT MODUL */}
+                        {activeTab === 'chat' && (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[72vh] bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden animate-fade-in">
+                                <div className="border-r border-slate-200 p-4 flex flex-col">
+                                    <h3 className="font-black text-base text-slate-900 mb-3">Nachrichten</h3>
+                                    <div className="space-y-2 overflow-y-auto flex-1">
+                                        {[
+                                            { name: '🍳 Küchen-Team Meppen', msg: 'Zählung erledigt', unread: 0 },
+                                            { name: '👥 Alle Mitarbeiter', msg: 'Wochenplan ist da', unread: 2 },
+                                            { name: 'Marina Jänen', msg: 'Brauchen Servietten', unread: 0 }
+                                        ].map((c, idx) => (
+                                            <div key={idx} className="p-3 hover:bg-slate-50 rounded-2xl cursor-pointer flex items-center justify-between">
+                                                <div>
+                                                    <div className="font-bold text-xs text-slate-900">{c.name}</div>
+                                                    <div className="text-[11px] text-slate-500 truncate mt-0.5">{c.msg}</div>
+                                                </div>
+                                                {c.unread > 0 && <span className="bg-brand text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{c.unread}</span>}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="md:col-span-2 flex flex-col bg-slate-50/50">
+                                    <div className="p-4 bg-white border-b border-slate-200 flex items-center justify-between">
+                                        <div className="font-black text-sm text-slate-900">{selectedChat.name}</div>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => triggerToast('📞 Audioanruf wird gestartet...')} className="p-2 bg-slate-100 rounded-xl text-slate-700 hover:bg-slate-200"><Icon name="phone" size={16} /></button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex-1 p-4 overflow-y-auto space-y-3">
+                                        {selectedChat.messages.map(m => (
+                                            <div key={m.id} className={`flex flex-col max-w-[70%] ${m.isMe ? 'ml-auto items-end' : 'items-start'}`}>
+                                                <div className={`p-3.5 rounded-2xl text-xs shadow-xs ${m.isMe ? 'bg-brand text-white rounded-br-xs' : 'bg-white text-slate-800 rounded-bl-xs border border-slate-200'}`}>
+                                                    <div>{m.text}</div>
+                                                    <div className="text-[9px] mt-1 text-right opacity-75">{m.time}</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="p-3 bg-white border-t border-slate-200 flex gap-2">
+                                        <input 
+                                            type="text" 
+                                            value={chatInput} 
+                                            onChange={e => setChatInput(e.target.value)} 
+                                            placeholder="Nachricht schreiben..."
+                                            className="flex-1 bg-slate-100 rounded-2xl px-4 py-2.5 text-xs outline-none"
+                                        />
+                                        <button onClick={() => { if (!chatInput.trim()) return; setSelectedChat({...selectedChat, messages: [...selectedChat.messages, { id: Date.now(), sender: 'Du', text: chatInput, time: 'Gerade eben', isMe: true }]}); setChatInput(''); }} className="bg-brand text-white px-5 rounded-2xl font-bold text-xs">Senden</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 3. DIENSTPLAN MODUL */}
+                        {activeTab === 'schedule' && (
+                            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-6 animate-fade-in">
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <h2 className="text-xl font-black text-slate-900">Dienstplan Oktober 2026</h2>
+                                        <p className="text-xs text-slate-500 mt-0.5">Schnitzelwelt Meppen • Deine Arbeitszeit</p>
+                                    </div>
+                                    <div className="bg-rose-50 text-brand px-4 py-2 rounded-2xl font-extrabold text-xs border border-rose-200">
+                                        Gesamt: 42 Std. / Soll: 160 Std.
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="p-5 rounded-2xl border-l-4 border-l-brand bg-slate-50 border border-slate-200 space-y-2">
+                                        <span className="text-[10px] font-black uppercase text-brand bg-brand-50 px-2.5 py-1 rounded">Front of House</span>
+                                        <h4 className="font-black text-lg text-slate-900">09:00 - 17:00 Uhr</h4>
+                                        <p className="text-xs text-slate-500">Morgen, Do. 22. Okt • Theke & Service</p>
+                                    </div>
+                                    <div className="p-5 rounded-2xl border-l-4 border-l-slate-400 bg-slate-50 border border-slate-200 space-y-2">
+                                        <span className="text-[10px] font-black uppercase text-slate-600 bg-slate-200 px-2.5 py-1 rounded">Back of House</span>
+                                        <h4 className="font-black text-lg text-slate-900">11:00 - 19:30 Uhr</h4>
+                                        <p className="text-xs text-slate-500">Fr. 23. Okt • Küchenleitung</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 4. HUB & ACADEMY MODUL */}
+                        {activeTab === 'hub' && (
+                            <div className="space-y-6 animate-fade-in">
+                                <div className="bg-brand text-white rounded-3xl p-8 shadow-lg flex flex-col md:flex-row justify-between items-center gap-4">
+                                    <div>
+                                        <span className="bg-white/20 text-white text-[10px] font-black uppercase px-3 py-1 rounded-full">Einarbeitungskurs</span>
+                                        <h2 className="text-2xl font-black mt-2">Willkommen bei Schnitzelwelt</h2>
+                                        <p className="text-xs text-white/80 mt-1">Absolviere alle Checkpoints, um dein Badge im Profil freizuschalten.</p>
+                                    </div>
+                                    <button onClick={() => setActiveCourse({ title: 'Willkommen bei Schnitzelwelt', progress: 66 })} className="bg-white text-brand px-6 py-3 rounded-2xl font-black text-xs shadow hover:bg-slate-100 transition">
+                                        Kurs fortsetzen →
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {[
+                                        { title: 'Die Schnitzelwelt Art', category: 'Service am Gast', time: '2 Min.' },
+                                        { title: 'Goldene Panade Standard', category: 'Küche', time: '3 Min.' },
+                                        { title: '14-Uhr Zählung & SmartPrep', category: 'Management', time: '2 Min.' }
+                                    ].map((h, i) => (
+                                        <div key={i} className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3 cursor-pointer hover:border-brand transition">
+                                            <span className="text-[10px] font-extrabold uppercase text-brand bg-rose-50 px-2.5 py-1 rounded-full">{h.category}</span>
+                                            <h4 className="font-black text-sm text-slate-900">{h.title}</h4>
+                                            <div className="text-xs text-slate-400 flex items-center gap-1"><Icon name="clock" size={14} /> Lesezeit: {h.time}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 5. PROFIL / DU MODUL */}
+                        {activeTab === 'profile' && (
+                            <div className="max-w-xl mx-auto bg-white rounded-3xl border border-slate-200 shadow-sm p-8 space-y-6 animate-fade-in">
+                                <div className="flex items-center gap-4 pb-6 border-b border-slate-100">
+                                    <div className="w-20 h-20 rounded-2xl bg-brand text-white text-2xl font-black flex items-center justify-center shadow">
+                                        {currentUser?.name ? currentUser.name.charAt(0) : 'M'}
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-black text-slate-900">{currentUser?.name || 'Marvin Ringer'}</h2>
+                                        <p className="text-xs text-slate-500 font-medium mt-0.5">{currentUser?.role || 'Mitarbeiter'} • {currentUser?.branch || 'Schnitzelwelt Meppen'}</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200">
+                                        <h4 className="font-extrabold text-xs text-amber-900 mb-1">🏅 Verdiente Abzeichen</h4>
+                                        <div className="flex gap-2 mt-2">
+                                            <span className="bg-white border border-amber-300 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-900 shadow-xs">
+                                                🥩 Frisch paniert
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <button onClick={onLogout} className="w-full py-3.5 bg-red-50 text-red-600 rounded-2xl font-bold text-xs hover:bg-red-100 transition flex items-center justify-center gap-2">
+                                        <Icon name="log-out" size={16} /> Aus der App abmelden
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                    </main>
+
+                    {/* TOAST OVERLAY */}
+                    {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
                 </div>
             );
         };
 
-
-        // --- APP CONTROLLER ---
+        // =========================================================================
+        // ROOT APP CONTROLLER
+        // =========================================================================
 
         const App = () => {
-            const [view, setView] = useState('welcome'); // 'welcome' -> 'gatekeeper' -> 'setup' -> 'main'
-            const [authUser, setAuthUser] = useState(null);
+            const [isLoggedIn, setIsLoggedIn] = useState(false);
+            const [currentUser, setCurrentUser] = useState(null);
 
             return (
-                <div className="min-h-screen flex items-center justify-center p-4 bg-slate-900">
-                    <div className="w-full max-w-[390px] h-[844px] max-h-[90vh] bg-white rounded-[2.5rem] shadow-2xl overflow-hidden relative border-[6px] border-gray-900 flex flex-col">
-                        
-                        <div className="h-7 w-full bg-transparent absolute top-0 z-50 flex justify-between items-end px-6 pb-1 pointer-events-none">
-                            <span className="text-[11px] font-bold text-gray-800">12:00</span>
-                            <div className="flex gap-1.5 items-center">
-                                <Icon name="signal" size={12} className="text-gray-800" strokeWidth={3} />
-                                <Icon name="wifi" size={12} className="text-gray-800" strokeWidth={3} />
-                                <Icon name="battery" size={14} className="text-gray-800" />
-                            </div>
-                        </div>
-
-                        <div className="flex-1 mt-7 overflow-hidden">
-                            {view === 'welcome' && <OnboardingWelcome onNext={() => setView('gatekeeper')} />}
-                            {view === 'gatekeeper' && <OnboardingGatekeeper onAuthenticated={(user) => { setAuthUser(user); setView('setup'); }} />}
-                            {view === 'setup' && <OnboardingSetup user={authUser} onComplete={() => setView('main')} />}
-                            {view === 'main' && <MainApp user={authUser} />}
-                        </div>
-
-                        <div className="h-5 w-full absolute bottom-0 flex justify-center items-center pointer-events-none z-50">
-                            <div className="w-1/3 h-1 bg-gray-900 rounded-full opacity-20"></div>
-                        </div>
-
-                    </div>
+                <div>
+                    {!isLoggedIn ? (
+                        <OnboardingFlow onLoginSuccess={(user) => { setCurrentUser(user); setIsLoggedIn(true); }} />
+                    ) : (
+                        <MainDashboard currentUser={currentUser} onLogout={() => { setIsLoggedIn(false); setCurrentUser(null); }} />
+                    )}
                 </div>
             );
         };
