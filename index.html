@@ -333,7 +333,7 @@
                 {
                     id: 1,
                     author: 'Marvin Ringer',
-                    role: 'Admin / Inhaber',
+                    role: 'Admin',
                     date: 'Heute, 09:15',
                     channel: '🍽️ Schnitzel-Talk & News',
                     important: true,
@@ -791,7 +791,7 @@
                 } catch (err) {
                     // Smart Demo-Fallback, wenn der Server offline ist
                     if (email && password) {
-                        onLoginSuccess({ name: 'Marvin Ringer', role: 'Inhaber & Admin', branch: 'Schnitzelwelt Meppen' });
+                        onLoginSuccess({ name: 'Marvin Ringer', role: 'Admin', branch: 'Schnitzelwelt Meppen' });
                     } else {
                         setErrorMsg('Bitte E-Mail und Passwort eingeben.');
                     }
