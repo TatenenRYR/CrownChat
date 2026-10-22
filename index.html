@@ -144,7 +144,7 @@
         const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : 'https://gastrocrown.com/api';
 
         // =========================================================================
-        // 1. REGULÄRER LOGIN (Normaler Arbeitsalltag mit E-Mail UND Kassen-PIN)
+        // 1. REGULÄRER LOGIN (Normaler Arbeitsalltag mit E-Mail UND Mitarbeiter-PIN)
         // =========================================================================
         const LoginScreen = ({ onLoginSuccess }) => {
             const [email, setEmail] = useState('');
@@ -233,7 +233,7 @@
                             {/* PIN & Passwort (Google Split-Layout) */}
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2 ml-1">Kassen-PIN</label>
+                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2 ml-1">Mitarbeiter-PIN</label>
                                     <div className="relative flex items-center group">
                                         <span className="absolute left-4 text-slate-500 group-focus-within:text-brand transition-colors"><Icon name="hash" size={18} /></span>
                                         <input 
@@ -318,7 +318,7 @@
             const handlePinSubmit = async (e) => {
                 e.preventDefault();
                 if (!pin || pin.length < 4) {
-                    setErrorMsg('Bitte 4-stellige Kassen-PIN eingeben.');
+                    setErrorMsg('Bitte 4-stellige Mitarbeiter-PIN eingeben.');
                     return;
                 }
                 setLoading(true);
@@ -413,7 +413,7 @@
 
                                 <div className="space-y-4 pt-2">
                                     <div>
-                                        <label className="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2 ml-1">Deine Kassen-PIN</label>
+                                        <label className="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2 ml-1">Deine Mitarbeiter-PIN</label>
                                         <div className="material-input flex items-center bg-slate-50 border border-slate-200 rounded-xl px-4 py-4 transition-all">
                                             <Icon name="hash" size={18} className="text-slate-400 mr-3" />
                                             <input 
