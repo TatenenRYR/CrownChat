@@ -900,20 +900,24 @@
         // ROOT 
         // =========================================================================
         const App = () => {
+            // Hier prüfen wir, ob ?activate=true in der URL steht!
             const urlParams = new URLSearchParams(window.location.search);
             const hasActivationLink = urlParams.has('activate');
 
             const [user, setUser] = useState(null);
 
+            // Wenn eingeloggt, zeige das Haupt-Dashboard
             if (user) {
                 return <MainApp currentUser={user} onLogout={() => setUser(null)} />;
             }
 
-            if (!hasActivationLink) {
-                return <LoginScreen onLoginSuccess={(userData) => setUser(userData)} />;
+            // WICHTIG: Wenn ?activate=true IN DER URL STEHT, zeige den OnboardingFlow!
+            if (hasActivationLink) {
+                return <OnboardingFlow onLoginSuccess={(userData) => setUser(userData)} />;
             }
 
-            return <OnboardingFlow onLoginSuccess={(userData) => setUser(userData)} />;
+            // In allen anderen Fällen zeige den normalen Login-Screen
+            return <LoginScreen onLoginSuccess={(userData) => setUser(userData)} />;
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
