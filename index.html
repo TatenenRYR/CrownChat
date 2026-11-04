@@ -173,7 +173,7 @@
                 } catch (err) {
                     // Fallback nur für lokale Tests
                     if (identifier && password) {
-                        onLoginSuccess({ id: 1414, name: 'Marvin Ringer', role: 'Inhaber / Admin', branch: 'Schnitzelwelt Meppen', departments: ['management', 'service'] });
+                        onLoginSuccess({ id: 1414, name: 'Marvin Ringer', role: 'Inhaber / Admin', branch: 'Kiek in de Pann Twist', departments: ['management', 'service'] });
                     } else {
                         setErrorType('error');
                         setErrorMsg('Netzwerkfehler: Server nicht erreichbar.');
@@ -297,7 +297,7 @@
                     const response = await fetch(`${API_BASE}/staff/login-pin`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ pin: pin.trim(), appId: 'schnitzelwelt' })
+                        body: JSON.stringify({ pin: pin.trim(), appId: 'Kiek in de Pann' })
                     });
                     const data = await response.json();
                     if (response.ok && data.success) {
@@ -308,7 +308,7 @@
                     }
                 } catch (err) {
                     if (pin === '1414') {
-                        setStaffData({ id: 99, name: 'Test Mitarbeiter', role: 'Service', branch: 'Meppen' });
+                        setStaffData({ id: 99, name: 'Test Mitarbeiter', role: 'Service', branch: 'Twist' });
                         setStep(3);
                     } else {
                         setErrorMsg('Keine Verbindung zum Server.');
@@ -333,7 +333,7 @@
 
                 setTimeout(() => {
                     setLoading(false);
-                    onLoginSuccess(staffData || { name: 'Mitarbeiter', role: 'Team', branch: 'Meppen' });
+                    onLoginSuccess(staffData || { name: 'Mitarbeiter', role: 'Team', branch: 'Twist' });
                 }, 800);
             };
 
@@ -513,8 +513,8 @@
             const [showPostModal, setShowPostModal] = useState(false);
 
             const [chats, setChats] = useState([
-                { id: 1, name: '🍳 Küchen-Team Meppen', lastMsg: 'Zählung erfolgreich abgeschlossen ✅', time: '14:30', unread: 0, online: true, messages: [
-                    { id: 1, sender: 'GastroCrown Bot', text: '14-Uhr Zählung in Meppen abgeschlossen.', time: '14:05', isMe: false }
+                { id: 1, name: '🍳 Küchen-Team Twist', lastMsg: 'Zählung erfolgreich abgeschlossen ✅', time: '14:30', unread: 0, online: true, messages: [
+                    { id: 1, sender: 'GastroCrown Bot', text: '14-Uhr Zählung in Twist abgeschlossen.', time: '14:05', isMe: false }
                 ]},
                 { id: 2, name: '👥 Alle Mitarbeiter', lastMsg: 'Mittagstisch ist online!', time: 'Gestern', unread: 2, online: false, messages: [
                     { id: 1, sender: 'Admin', text: 'Mittagstisch ist online!', time: 'Gestern', isMe: false }
@@ -775,20 +775,20 @@
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div className="p-6 rounded-3xl border-l-8 border-l-brand bg-slate-50 border border-slate-200 space-y-3 shadow-sm hover:shadow-google transition">
                                         <div className="flex justify-between items-center">
-                                            <span className="text-[10px] font-black uppercase text-brand bg-brand-50 px-3 py-1 rounded-full">Front of House</span>
+                                            <span className="text-[10px] font-black uppercase text-brand bg-brand-50 px-3 py-1 rounded-full">Service</span>
                                             <span className="text-xs font-black text-slate-500">Morgen, Do. 22. Okt</span>
                                         </div>
                                         <h4 className="font-black text-xl text-slate-900">09:00 - 17:00 Uhr</h4>
-                                        <p className="text-xs text-slate-600 font-medium flex items-center gap-1.5"><Icon name="map-pin" size={14} /> Schnitzelwelt Meppen • Hauptkasse & Service</p>
+                                        <p className="text-xs text-slate-600 font-medium flex items-center gap-1.5"><Icon name="map-pin" size={14} /> Kiek in de Pann Twist • Hauptkasse & Service</p>
                                     </div>
 
                                     <div className="p-6 rounded-3xl border-l-8 border-l-slate-700 bg-slate-50 border border-slate-200 space-y-3 shadow-sm hover:shadow-google transition">
                                         <div className="flex justify-between items-center">
-                                            <span className="text-[10px] font-black uppercase text-slate-700 bg-slate-200 px-3 py-1 rounded-full">Back of House</span>
+                                            <span className="text-[10px] font-black uppercase text-slate-700 bg-slate-200 px-3 py-1 rounded-full">Küche</span>
                                             <span className="text-xs font-black text-slate-500">Fr. 23. Okt</span>
                                         </div>
                                         <h4 className="font-black text-xl text-slate-900">11:00 - 19:30 Uhr</h4>
-                                        <p className="text-xs text-slate-600 font-medium flex items-center gap-1.5"><Icon name="map-pin" size={14} /> Schnitzelwelt Meppen • Küche & Standard</p>
+                                        <p className="text-xs text-slate-600 font-medium flex items-center gap-1.5"><Icon name="map-pin" size={14} /> Kiek in de Pann Twist • Küche & Standard</p>
                                     </div>
                                 </div>
                             </div>
@@ -800,7 +800,7 @@
                                     <div className="absolute right-0 top-0 w-64 h-64 bg-white/5 rounded-full blur-3xl pointer-events-none"></div>
                                     <div className="relative z-10">
                                         <span className="bg-white/20 text-white text-[10px] font-black uppercase px-3 py-1 rounded-full">Offizieller Onboarding-Kurs</span>
-                                        <h2 className="text-3xl font-black mt-2">Willkommen bei Schnitzelwelt</h2>
+                                        <h2 className="text-3xl font-black mt-2">Willkommen bei Kiek in de Pann</h2>
                                         <p className="text-xs text-white/80 mt-1 font-medium">Lerne unsere Qualitätsstandards und erhalte dein exklusives Abzeichen.</p>
                                     </div>
                                     <button onClick={() => triggerToast('📚 Kurs wird geöffnet...')} className="bg-white text-brand px-7 py-3.5 rounded-2xl font-black text-xs shadow-xl hover:bg-slate-100 transition relative z-10">
@@ -810,7 +810,7 @@
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                                     {[
-                                        { title: 'Die Schnitzelwelt Art', category: 'Service am Gast', time: '2 Min.', icon: 'coffee' },
+                                        { title: 'Die Kiek in de Pann Art', category: 'Service am Gast', time: '2 Min.', icon: 'coffee' },
                                         { title: 'Goldene Panade Standard', category: 'Küche', time: '3 Min.', icon: 'utensils' },
                                         { title: '14-Uhr Zählung & SmartPrep', category: 'Management', time: '2 Min.', icon: 'shield-check' }
                                     ].map((h, i) => (
@@ -840,7 +840,7 @@
                                     </div>
                                     
                                     <h2 className="text-2xl font-black text-slate-900">{currentUser?.name || 'Marvin Ringer'}</h2>
-                                    <p className="text-sm text-slate-500 font-bold mt-1 mb-6">{currentUser?.role || 'Service'} • {currentUser?.branch || 'Meppen'}</p>
+                                    <p className="text-sm text-slate-500 font-bold mt-1 mb-6">{currentUser?.role || 'Service'} • {currentUser?.branch || 'Twist'}</p>
                                     
                                     <button onClick={() => { onLogout(); triggerToast('Erfolgreich abgemeldet', 'success'); }} className="mx-auto px-6 py-3 bg-slate-100 text-slate-700 rounded-2xl font-black text-sm hover:bg-red-50 hover:text-red-600 transition flex items-center justify-center gap-2">
                                         <Icon name="log-out" size={16} /> Sicher Abmelden
