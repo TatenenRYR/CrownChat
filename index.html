@@ -152,7 +152,7 @@
                 setErrorMsg('');
 
                 try {
-                    const response = await fetch(`${API_BASE}/Messanger/login`, {
+                    const response = await fetch(`${API_BASE}/crownchat/login`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ identifier: identifier.trim(), password })
@@ -199,7 +199,7 @@
                         <div className="flex flex-col items-center justify-center mb-8">
                             <div className="w-16 h-16 rounded-[1.25rem] overflow-hidden shadow-float mb-4 border border-brand/30 bg-gradient-to-br from-brand to-brand-dark p-0.5">
                                 <div className="w-full h-full rounded-[1.1rem] overflow-hidden bg-brand">
-                                    <img src="http://gastrocrown.com/images/Messanger/Messanger-App-Icon.png" alt="Logo" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                                    <img src="http://gastrocrown.com/images/CrownChat/CrownChat-App-Icon.png" alt="Logo" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
                                 </div>
                             </div>
                             <h1 className="font-black text-white text-2xl tracking-tight">Crown<span className="text-brand">Chat</span></h1>
@@ -324,7 +324,7 @@
                 setLoading(true);
 
                 try {
-                    await fetch(`${API_BASE}/Messanger/register-setup`, {
+                    await fetch(`${API_BASE}/crownchat/register-setup`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ staffId: staffData?.id, email, password })
@@ -349,7 +349,7 @@
                                 </div>
                                 <div>
                                     <h1 className="text-2xl font-black text-slate-900 tracking-tight">App Aktivierung</h1>
-                                    <p className="text-xs text-slate-500 mt-1 font-semibold">Messanger Enterprise Portal</p>
+                                    <p className="text-xs text-slate-500 mt-1 font-semibold">Messanger Portal</p>
                                 </div>
                                 <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 text-left shadow-inner">
                                     <div className="flex items-center gap-2 text-brand font-black text-[11px] uppercase tracking-wider mb-2">
@@ -556,7 +556,7 @@
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-[10px] overflow-hidden shadow-inner border border-slate-200 bg-brand p-0.5">
                                 <div className="w-full h-full bg-white rounded-lg overflow-hidden">
-                                    <img src="http://gastrocrown.com/images/Messanger/Messanger-App-Icon.png" alt="Logo" className="w-full h-full object-cover" />
+                                    <img src="http://gastrocrown.com/images/CrownChat/CrownChat-App-Icon.png" alt="Logo" className="w-full h-full object-cover" />
                                 </div>
                             </div>
                             <div>
